@@ -2,10 +2,10 @@
 Ferramenta para criação de mapas em Love2D.
 
 IMPORTANTE
-Se utilizar Windows:
+<br>Se utilizar Windows:<br>
   Para a ferramenta funcionar é necessario criar um diretorio na pasta raiz do Love2D com o nome "location" e dentro do diretorio 
   location criar um arquivo de texto com o nome "tiles.txt".
-Se utilizar Ubuntu:
+<br>Se utilizar Ubuntu:<br>
   Para a ferramenta funcionar é necessario criar um diretorio na pasta home com o nome "location" e dentro do diretorio 
   location criar um arquivo de texto com o nome "tiles.txt".
 
