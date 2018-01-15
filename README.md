@@ -12,9 +12,9 @@ IMPORTANTE
 TECLAS<br><br>
   Use as setas do teclado para mover o marcador<br>
   1 a 9 - Muda o sprite para o sprite de numero correspondente a barra superior<br>
-  "Q" - Grava as cordenada no arquivo tiles.txt na pasta location<br>
+  "Q" - Grava as cordenadas no arquivo tiles.txt na pasta location<br>
   "ESC" - Sair do editor<br>
-  "E" - Muda o para o proximo sprite<br>
+  "E" - Muda para o proximo sprite<br>
   "W" - Muda para o sprite anterior<br>
   "D" - Deleta o tile atual<br>
   "+" - Aumenta o zoom<br>
