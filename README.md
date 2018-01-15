@@ -1,13 +1,10 @@
 # PlaceTool
 Ferramenta para criação de mapas em Love2D.<br><br>
 
-IMPORTANTE
-<br><br>Se utilizar Windows:<br><br>
-  Para a ferramenta funcionar é necessario criar um diretorio na pasta raiz do Love2D com o nome "location" e dentro do diretorio 
-  location criar um arquivo de texto com o nome "tiles.txt".
-<br><br>Se utilizar Ubuntu:<br><br>
-  Para a ferramenta funcionar é necessario criar um diretorio na pasta home com o nome "location" e dentro do diretorio 
-  location criar um arquivo de texto com o nome "tiles.txt".
+ADICIONAR TILES<br><br>
+
+Todos os arquivos presentes no diretorio PlaceTool/tiles serão adicionados ao editor.<br>
+IMPORTANTE: Os arquivos não podem conter espaços no nome.<br><br>
 
 TECLAS<br><br>
   Use as setas do teclado para mover o marcador<br>
