@@ -5,34 +5,32 @@ function PlaceTool:new()
 	local placeTool = placeTool or {}
 	setmetatable(placeTool, PlaceTool)
 	
-	placeTool.path = love.filesystem.getSource( )
-	
+	placeTool.favorites = 
+	{
+		[1] = {num = 0, key = "Z"},
+		[2] = {num = 0, key = "X"},
+		[3] = {num = 0, key = "C"},
+		[4] = {num = 0, key = "V"}
+	}	
+	placeTool.scale = 5
+	placeTool.path = love.filesystem.getSource()
 	placeTool.sprites = {}
 	placeTool:checkTilesOrder()
 	placeTool:loadSprites()
-
-	placeTool.favorites = {
-				[1] = {num = 0, key = "Z"},
-				[2] = {num = 0, key = "X"},
-				[3] = {num = 0, key = "C"},
-				[4] = {num = 0, key = "V"}
-	}
-	placeTool.scale = 5
+	placeTool.spritesTableSize = table.getn(placeTool.sprites)
 	placeTool.gridSize = 16
+	placeTool.interval = placeTool.gridSize*placeTool.scale
+	placeTool.mapPositions = placeTool:getMapPositions()
 	placeTool.adjPosX = 0
 	placeTool.adjPosY = 0
 	placeTool.posX = 0
 	placeTool.posY = 0
-	placeTool.interval = placeTool.sprites[1]:getWidth()*placeTool.scale
 	placeTool.currentImage = 1
 	placeTool.zoom = 1
-	placeTool.spritesTableSize = table.getn(placeTool.sprites)
 	placeTool.toolBar = 0
 	placeTool.info = false
 	placeTool.grid = true
-	placeTool.favoritesSelect = false	
-	placeTool.file = io.open(placeTool.path.."/location/tiles.txt", "r")
-	placeTool.mapPositions = placeTool:getMapPositions()
+	placeTool.favoritesSelect = false
 
 	return placeTool
 end --PlaceTool:new
@@ -51,7 +49,7 @@ function PlaceTool:draw()
 end --PlaceTool:draw
 
 function PlaceTool:keypressed(key)
-	self:makeFavorite(key)
+	self:manageFavotites(key)
 	self:showInfo(key)
 	self:changeToolbar(key)
 	self:changeTileImage(key)
@@ -71,27 +69,15 @@ function PlaceTool:writeLocation()
 end --PlaceTool:writeLocation
 
 function PlaceTool:getMapPositions()
+	local file = io.open(self.path.."/location/tiles.txt", "r")
 	local positions = {}
-	for line in self.file:lines() do
-		local lineX, lineY, lineSprite = "","",""
-		local separatorCnt = 0
+	for line in file:lines() do
 		if(line ~= "")then
-			for ch in line:gmatch"." do
-			    if(ch ~= ",")then    
-			        if(separatorCnt == 0)then
-			            lineX = lineX..ch
-			        end
-			        if(separatorCnt == 1)then
-			            lineY = lineY..ch
-			        end
-			        if(separatorCnt == 2)then
-			            lineSprite = lineSprite..ch
-			        end
-			    else
-			        separatorCnt = separatorCnt+1
-			    end
+			local linePositions = {}
+			for num in line:gmatch"%d+" do
+					 table.insert(linePositions, num) 
 			end
-			position = {x = lineX, y = lineY, sprite = lineSprite} 
+			position = {x = linePositions[1], y = linePositions[2], sprite = linePositions[3]} 
 			table.insert(positions, position)
 		end
 	end
@@ -113,25 +99,6 @@ function PlaceTool:changeImg(asc)
 		self.currentImage = self.spritesTableSize
 	end
 end --PlaceTool:changeImg
-
-function PlaceTool:deleteTile(key)
-	local x, y = self.x, self.y	
-	if(key == "d")then
-		local readFile = io.open(self.path.."/location/tiles.txt", "r")
-
-		fileText = readFile:read('*a')
-		readFile:close()
-		print(self.adjPosX..","..self.adjPosY..",%d*")
-		fileText = fileText:gsub("\n"..self.adjPosX..","..self.adjPosY..",%d+", '\n')
-		fileText = fileText:gsub("\n+", '\n')
-		local file = io.open(self.path.."/location/tiles.txt", "w+")
-		print(io.output(file))
-		io.flush()
-		io.write(fileText)
-		io.close()
-		self:updateMap()
-	end
-end --PlaceTool:deleteTile
 
 function PlaceTool:moveTool(dt)
 	if(love.keyboard.isDown("right"))then
@@ -193,6 +160,7 @@ function PlaceTool:drawToolbars()
 		if(self.sprites[i+self.toolBar] ~= nil)then
 				local x = (self.adjPosX-(love.graphics.getWidth()/2/self.zoom)+prevPos*3/self.zoom)-self.sprites[1]:getWidth()*3/self.zoom
 				local y = self.adjPosY-(love.graphics.getHeight()/2/self.zoom)
+				
 				love.graphics.setColor(255, 255, 255)
 				love.graphics.draw(self.sprites[i+self.toolBar], x, y, 0, 3/self.zoom, 3/self.zoom)
 				love.graphics.setColor(0, 255, 0, 230)
@@ -223,10 +191,6 @@ function PlaceTool:drawToolbars()
 end--PlaceTool:drawToolbars
 
 function PlaceTool:drawUI()
-	love.graphics.setColor(255, 0, 0)
-	love.graphics.line(0, 0, self.adjPosX+love.graphics.getWidth()/2/self.zoom, 0)
-	love.graphics.line(0, 0, 0, self.adjPosY+love.graphics.getHeight()/2/self.zoom)
-
 	love.graphics.setColor(0, 255, 0)
 	if(self.favoritesSelect)then
 		love.graphics.print("Pressione Z, X, C ou V para marcar o sprite atual como favorito.", self.adjPosX-love.graphics.getWidth()/4/self.zoom, self.adjPosY,0,1/self.zoom)
@@ -263,52 +227,46 @@ function PlaceTool:drawUI()
 	end
 end--PlaceTool:drawUI
 
-function PlaceTool:makeFavorite(key)
+function PlaceTool:deleteTile(key)
+	local x, y = self.x, self.y	
+	if(key == "d")then
+		local readFile = io.open(self.path.."/location/tiles.txt", "r")
+
+		fileText = readFile:read('*a')
+		readFile:close()
+		print(self.adjPosX..","..self.adjPosY..",%d*")
+		fileText = fileText:gsub("\n"..self.adjPosX..","..self.adjPosY..",%d+", '\n')
+		fileText = fileText:gsub("\n+", '\n')
+		local file = io.open(self.path.."/location/tiles.txt", "w+")
+		print(io.output(file))
+		io.flush()
+		io.write(fileText)
+		io.close()
+		self:updateMap()
+	end
+end --PlaceTool:deleteTile
+
+function PlaceTool:manageFavotites(key)
 	if(key == "f")then
 		self.favoritesSelect = true
 	end
 
 	if(key == "z")then
-		if(self.favoritesSelect)then
-			self.favoritesSelect = false
-			self.favorites[1].num = self.currentImage
-		else
-			if(self.favorites[1].num > 0)then
-				self.currentImage = self.favorites[1].num
-			end
-		end
+		self:makeFavorite(1)
 	end
+
 	if(key == "x")then
-		if(self.favoritesSelect)then
-			self.favoritesSelect = false
-			self.favorites[2].num = self.currentImage
-		else
-			if(self.favorites[2].num > 0)then
-				self.currentImage = self.favorites[2].num
-			end
-		end
+		self:makeFavorite(2)
 	end
+
 	if(key == "c")then
-		if(self.favoritesSelect)then
-			self.favoritesSelect = false
-			self.favorites[3].num = self.currentImage
-		else
-			if(self.favorites[3].num > 0)then
-				self.currentImage = self.favorites[3].num
-			end
-		end
+		self:makeFavorite(3)
 	end
+
 	if(key == "v")then
-		if(self.favoritesSelect)then
-			self.favoritesSelect = false
-			self.favorites[4].num = self.currentImage
-		else
-			if(self.favorites[4].num > 0)then
-				self.currentImage = self.favorites[4].num
-			end
-		end
+		self:makeFavorite(4)
 	end
-end--PlaceTool:makeFavorite
+end--PlaceTool:manageFavotites
 
 function PlaceTool:showInfo(key)
 	if(key == "i")then
@@ -322,8 +280,11 @@ end--PlaceTool:showInfo
 
 function PlaceTool:changeToolbar(key)
 	if(key == ".")then
-		self.toolBar = self.toolBar+9
+		if(self.spritesTableSize >= self.toolBar+9)then
+			self.toolBar = self.toolBar+9
+		end
 	end
+
 	if(key == ",")then
 		self.toolBar = self.toolBar-9
 		if(self.toolBar < 0)then
@@ -334,12 +295,14 @@ end--PlaceTool:changeToolbar
 
 function PlaceTool:changeZoom(key)
 	if(key == "=")then
-		self.zoom = self.zoom+0.1
+		if(self.zoom < 1)then
+			self.zoom = self.zoom+0.1
+		end
 	end
-	if(key == "-")then
-		self.zoom = self.zoom-0.1
-		if(self.zoom < 0.2)then
-			self.zoom = 0.1
+
+	if(key == "-")then		
+		if(self.zoom > 0.2)then
+			self.zoom = self.zoom-0.1
 		end
 	end
 end--PlaceTool:changeZoom
@@ -366,34 +329,11 @@ function PlaceTool:changeTileImage(key)
 	end
 end--PlaceTool:changeTileImage
 
-function PlaceTool:updateMap()
-	self.file = io.open(self.path.."/location/tiles.txt", "r")
-	self.mapPositions = self:getMapPositions()
-end--PlaceTool:updateMap
-
 function PlaceTool:quitEditor(key)
 	if(key == "escape")then
 		love.event.quit()
 	end
 end--PlaceTool:quitEditor
-
-function PlaceTool:drawGrid()
-	if(self.grid)then
-		love.graphics.setColor(255, 255, 255, 100)
-		local prevPos = self.adjPosX-love.graphics.getWidth()*self.gridSize
-
-		while prevPos <  love.graphics.getWidth()/self.zoom do
-			love.graphics.line(self.adjPosX - love.graphics.getWidth()/2+prevPos, self.adjPosY - love.graphics.getHeight()/2/self.zoom, self.adjPosX - love.graphics.getWidth()/2+prevPos, self.adjPosY + love.graphics.getHeight()/2/self.zoom)
-			prevPos = prevPos+self.gridSize*self.scale
-		end
-
-		local prevPos = self.adjPosY-love.graphics.getWidth()*self.gridSize+60
-		while prevPos <  love.graphics.getHeight()/self.zoom do
-			love.graphics.line(self.adjPosX-love.graphics.getWidth()/2/self.zoom, self.adjPosY-love.graphics.getHeight()/2+prevPos,self.adjPosX+love.graphics.getWidth()/2/self.zoom, self.adjPosY-love.graphics.getHeight()/2+prevPos)
-			prevPos = prevPos+self.gridSize*self.scale
-		end
-	end
-end--PlaceTool:drawGrid
 
 function PlaceTool:showGrid(key)
 	if(key == "g")then
@@ -404,6 +344,41 @@ function PlaceTool:showGrid(key)
 		end
 	end
 end--PlaceTool:showGrid
+
+function PlaceTool:updateMap()
+	self.mapPositions = self:getMapPositions()
+end--PlaceTool:updateMap
+
+function PlaceTool:drawGrid()
+	if(self.grid)then
+		love.graphics.setColor(255, 255, 255, 100)
+
+		local prevPos = love.graphics.getWidth()/2
+		while prevPos <  love.graphics.getWidth()/self.zoom do
+			love.graphics.line(self.adjPosX - love.graphics.getWidth()/2+prevPos, self.adjPosY - love.graphics.getHeight()/2/self.zoom, self.adjPosX - love.graphics.getWidth()/2+prevPos, self.adjPosY + love.graphics.getHeight()/2/self.zoom)
+			prevPos = prevPos+self.gridSize*self.scale
+		end
+		local prevPos = love.graphics.getWidth()/2
+		while prevPos >  -love.graphics.getWidth()/self.zoom do
+			love.graphics.line(self.adjPosX - love.graphics.getWidth()/2+prevPos, self.adjPosY - love.graphics.getHeight()/2/self.zoom, self.adjPosX - love.graphics.getWidth()/2+prevPos, self.adjPosY + love.graphics.getHeight()/2/self.zoom)
+			prevPos = prevPos-self.gridSize*self.scale
+		end
+
+		local prevPos = love.graphics.getHeight()/2
+		while prevPos <  love.graphics.getHeight()/self.zoom do
+			love.graphics.line(self.adjPosX-love.graphics.getWidth()/2/self.zoom, self.adjPosY-love.graphics.getHeight()/2+prevPos,self.adjPosX+love.graphics.getWidth()/2/self.zoom, self.adjPosY-love.graphics.getHeight()/2+prevPos)
+			prevPos = prevPos+self.gridSize*self.scale
+		end
+		local prevPos = love.graphics.getHeight()/2
+		while prevPos >  -love.graphics.getHeight()/self.zoom do
+			love.graphics.line(self.adjPosX-love.graphics.getWidth()/2/self.zoom, self.adjPosY-love.graphics.getHeight()/2+prevPos,self.adjPosX+love.graphics.getWidth()/2/self.zoom, self.adjPosY-love.graphics.getHeight()/2+prevPos)
+			prevPos = prevPos-self.gridSize*self.scale
+		end
+	end
+	love.graphics.setColor(255, 0, 0)
+	love.graphics.line(0, 0, self.adjPosX+love.graphics.getWidth()/2/self.zoom, 0)
+	love.graphics.line(0, 0, 0, self.adjPosY+love.graphics.getHeight()/2/self.zoom)
+end--PlaceTool:drawGrid
 
 function PlaceTool:checkTilesOrder()
 	local images = love.filesystem.getDirectoryItems("tiles")
@@ -429,8 +404,21 @@ function PlaceTool:loadSprites()
 	local cnt = 1
 	for line in tilesOrder:lines()do		
 		if(love.filesystem.exists("tiles/"..line))then
-			self.sprites[cnt] = love.graphics.newImage("tiles/"..line)
-			cnt = cnt+1
+			self.sprites[cnt] = love.graphics.newImage("tiles/"..line)			
+		else
+			self.sprites[cnt] = love.graphics.newImage("icons/missingTile.png")
 		end
+		cnt = cnt+1
 	end
 end--PlaceTool:loadSprites
+
+function PlaceTool:makeFavorite(favorite)
+	if(self.favoritesSelect)then
+		self.favoritesSelect = false
+		self.favorites[favorite].num = self.currentImage
+	else
+		if(self.favorites[favorite].num > 0)then
+			self.currentImage = self.favorites[favorite].num
+		end
+	end
+end
