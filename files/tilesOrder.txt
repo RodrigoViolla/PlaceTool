@@ -31,3 +31,4 @@ WardrobeRight.png
 WoodGround.png
 BigCarpet.png
 Chair1.png
+BlackWall.png

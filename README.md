@@ -11,8 +11,8 @@ TECLAS<br><br>
   1 a 9 - Muda o sprite para o sprite de numero correspondente a barra superior<br>
   "Q" - Grava as cordenadas no arquivo tiles.txt na pasta location<br>
   "ESC" - Sair do editor<br>
-  "M" - Muda para o proximo sprite<br>
-  "N" - Muda para o sprite anterior<br>
+  ";" - Muda para o proximo sprite<br>
+  "/" - Muda para o sprite anterior<br>
   "D" - Deleta o tile atual<br>
   "+" - Aumenta o zoom<br>
   "-" - Diminui o zoom<br>

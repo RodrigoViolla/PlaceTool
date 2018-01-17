@@ -10,8 +10,12 @@ function PlaceTool:new()
 		[1] = {num = 0, key = "Z"},
 		[2] = {num = 0, key = "X"},
 		[3] = {num = 0, key = "C"},
-		[4] = {num = 0, key = "V"}
+		[4] = {num = 0, key = "V"},
+		[5] = {num = 0, key = "B"},
+		[6] = {num = 0, key = "N"},
+		[7] = {num = 0, key = "M"}
 	}	
+	placeTool.speed = 1000
 	placeTool.scale = 5
 	placeTool.path = love.filesystem.getSource()
 	placeTool.infoText = placeTool:loadInfo()
@@ -54,7 +58,7 @@ function PlaceTool:keypressed(key)
 	self:manageFavotites(key)
 	self:showInfo(key)
 	self:changeToolbar(key)
-	self:changeTileImage(key)
+	self:changeTile(key)
 	self:changeZoom(key)
 	self:writeTile(key)
 	self:deleteTile(key)
@@ -66,6 +70,7 @@ function PlaceTool:quit()
 	self:saveFavorites()
 end--PlaceTool:quit
 
+--Grava as cordenadas do tile no arquivo tiles.txt
 function PlaceTool:writeLocation()
   local file = io.open(self.path.."/files/tiles.txt", "a")
   print(io.output(file))
@@ -74,6 +79,7 @@ function PlaceTool:writeLocation()
   io.close()
 end --PlaceTool:writeLocation
 
+--Carrega as cordenadas dos tiles do arquivo tiles.txt e guarda em uma table
 function PlaceTool:getMapPositions()
 	local file = io.open(self.path.."/files/tiles.txt", "r")
 	local positions = {}
@@ -91,6 +97,7 @@ function PlaceTool:getMapPositions()
 	return positions
 end --PlaceTool:getMapPositions
 
+--Muda o contador da imagem do tile atual
 function PlaceTool:changeImg(asc)
 	if(asc)then
 		self.currentImage = self.currentImage+1
@@ -106,9 +113,10 @@ function PlaceTool:changeImg(asc)
 	end
 end --PlaceTool:changeImg
 
+--Move a ferramenta de desenho
 function PlaceTool:moveTool(dt)
 	if(love.keyboard.isDown("right"))then
-		self.posX = self.posX+dt*500		
+		self.posX = self.posX+dt*self.speed		
 		if(self.posX > self.adjPosX+self.interval)then
 			self.adjPosX = self.adjPosX+self.interval;
 		end
@@ -116,7 +124,7 @@ function PlaceTool:moveTool(dt)
 
 	if(love.keyboard.isDown("left"))then
 		if(self.adjPosX > 0)then
-			self.posX = self.posX-dt*500
+			self.posX = self.posX-dt*self.speed
 		end
 		if(self.posX < self.adjPosX-self.interval)then
 			self.adjPosX = self.adjPosX-self.interval;
@@ -125,7 +133,7 @@ function PlaceTool:moveTool(dt)
 
 	if(love.keyboard.isDown("up"))then
 		if(self.adjPosY > 0)then
-			self.posY = self.posY-dt*500
+			self.posY = self.posY-dt*self.speed
 		end
 		if(self.posY < self.adjPosY-self.interval)then
 			self.adjPosY = self.adjPosY-self.interval;
@@ -133,18 +141,20 @@ function PlaceTool:moveTool(dt)
 	end
 
 	if(love.keyboard.isDown("down"))then
-		self.posY = self.posY+dt*500
+		self.posY = self.posY+dt*self.speed
 		if(self.posY > self.adjPosY+self.interval)then
 			self.adjPosY = self.adjPosY+self.interval;
 		end
 	end
 end--PlaceTool:moveTool
 
+--Gerencia a posicao e o zoom da camera
 function PlaceTool:manageCamera()
 	love.graphics.scale(self.zoom, self.zoom)
 	love.graphics.translate(-self.adjPosX+love.graphics.getWidth()/(2*self.zoom), -self.adjPosY+love.graphics.getHeight()/(2*self.zoom))
 end--PlaceTool:manageCamera
 
+--Percorre a tabela de posicoes para desenhar o mapa
 function PlaceTool:drawMap()
 	for n,position in ipairs(self.mapPositions) do
 		love.graphics.setColor(255, 255, 255)
@@ -153,6 +163,7 @@ function PlaceTool:drawMap()
 	end
 end--PlaceTool:drawMap
 
+--Desenha o sprite da ferramenta de acordo com self.currentImage
 function PlaceTool:drawTool()
 	love.graphics.setColor(0, 0, 255)
 	love.graphics.rectangle('line', self.adjPosX, self.adjPosY, self.sprites[self.currentImage]:getWidth()*self.scale, self.sprites[self.currentImage]:getHeight()*self.scale)
@@ -160,7 +171,9 @@ function PlaceTool:drawTool()
 	love.graphics.draw(self.sprites[self.currentImage], self.adjPosX, self.adjPosY, 0, 5, 5)
 end--PlaceTool:drawTool
 
+--Desenha a barra de tiles e a barra de favoritos
 function PlaceTool:drawToolbars()
+	--Barra de tiles
 	local prevPos = self.sprites[1]:getWidth()
 	for i = 1,9 do
 		if(self.sprites[i+self.toolBar] ~= nil)then
@@ -180,9 +193,9 @@ function PlaceTool:drawToolbars()
 				prevPos = prevPos+self.sprites[i+self.toolBar]:getWidth()
 		end
 	end
-
+	--Barra de favoritos
 	local prevPos = self.sprites[1]:getWidth()
-	for i = 1,4 do
+	for i = 1,7 do
 		if(self.sprites[self.favorites[i].num] ~= nil)then
 				local x = (self.adjPosX-(love.graphics.getWidth()/2/self.zoom)+prevPos*3/self.zoom)-self.sprites[1]:getWidth()*3/self.zoom
 				local y = self.adjPosY+(love.graphics.getHeight()/2/self.zoom)-self.sprites[self.favorites[i].num]:getHeight()*3/self.zoom
@@ -202,10 +215,11 @@ function PlaceTool:drawToolbars()
 	end
 end--PlaceTool:drawToolbars
 
+--Desenha a interface do usuario
 function PlaceTool:drawUI()
 	love.graphics.setColor(0, 255, 0)
 	if(self.favoritesSelect)then
-		love.graphics.print("Pressione Z, X, C ou V para marcar o sprite atual como favorito.", self.adjPosX-love.graphics.getWidth()/4/self.zoom, self.adjPosY,0,1/self.zoom)
+		love.graphics.print("Pressione Z, X, C, V, B, N ou M para marcar o sprite atual como favorito.", self.adjPosX-love.graphics.getWidth()/4/self.zoom, self.adjPosY,0,1/self.zoom)
 	end
 
 	local toolBarHeight = 0
@@ -226,6 +240,7 @@ function PlaceTool:drawUI()
 	end
 end--PlaceTool:drawUI
 
+--Deleta as cordenadas do arquivo tiles.txt de acordo com a posicao da ferramenta
 function PlaceTool:deleteTile(key)
 	local x, y = self.x, self.y	
 	if(key == "d")then
@@ -245,6 +260,7 @@ function PlaceTool:deleteTile(key)
 	end
 end --PlaceTool:deleteTile
 
+--Define a barra de favoritos
 function PlaceTool:manageFavotites(key)
 	if(key == "f")then
 		self.favoritesSelect = true
@@ -265,8 +281,21 @@ function PlaceTool:manageFavotites(key)
 	if(key == "v")then
 		self:makeFavorite(4)
 	end
+
+	if(key == "b")then
+		self:makeFavorite(5)
+	end
+
+	if(key == "n")then
+		self:makeFavorite(6)
+	end
+
+	if(key == "m")then
+		self:makeFavorite(7)
+	end
 end--PlaceTool:manageFavotites
 
+--Mostra as informacoes de controles
 function PlaceTool:showInfo(key)
 	if(key == "i")then
 		if(self.info)then
@@ -277,6 +306,7 @@ function PlaceTool:showInfo(key)
 	end
 end--PlaceTool:showInfo
 
+--Muda a barra de tiles para a proxima barra
 function PlaceTool:changeToolbar(key)
 	if(key == ".")then
 		if(self.spritesTableSize >= self.toolBar+9)then
@@ -296,6 +326,7 @@ function PlaceTool:changeToolbar(key)
 	end	
 end--PlaceTool:changeToolbar
 
+--Muda o zoom da camera
 function PlaceTool:changeZoom(key)
 	if(key == "=")then
 		if(self.zoom < 1)then
@@ -310,6 +341,7 @@ function PlaceTool:changeZoom(key)
 	end
 end--PlaceTool:changeZoom
 
+--Insere um tile no arquivo tiles.txt
 function PlaceTool:writeTile(key)
 	if(key == " ")then
 		self:writeLocation()
@@ -317,8 +349,9 @@ function PlaceTool:writeTile(key)
 	end
 end--PlaceTool:writeTile
 
-function PlaceTool:changeTileImage(key)
-	if(key == "m")then
+--Muda o tile selecionado para o proximo/anterior da lista
+function PlaceTool:changeTile(key)
+	if(key == "/")then
 		if((self.currentImage%9) == 0)then
 			if(self.spritesTableSize >= self.toolBar+9)then
 				self.toolBar = self.toolBar+9
@@ -327,7 +360,7 @@ function PlaceTool:changeTileImage(key)
 		self:changeImg(true)
 	end
 
-	if(key == "n")then
+	if(key == ";")then
 		if((self.currentImage%9) == 1)then
 			self.toolBar = self.toolBar-9
 			if(self.toolBar < 0)then
@@ -341,7 +374,7 @@ function PlaceTool:changeTileImage(key)
 				self.currentImage = string.gsub(key, "%a+", '')+self.toolBar
 		end
 	end
-end--PlaceTool:changeTileImage
+end--PlaceTool:changeTile
 
 function PlaceTool:quitEditor(key)
 	if(key == "escape")then
@@ -363,10 +396,12 @@ function PlaceTool:updateMap()
 	self.mapPositions = self:getMapPositions()
 end--PlaceTool:updateMap
 
+--Desenha a grid do mapa
 function PlaceTool:drawGrid()
 	if(self.grid)then
 		love.graphics.setColor(255, 255, 255, 100)
 
+		--Desenha a grid vertical
 		local prevPos = love.graphics.getWidth()/2
 		while prevPos <  love.graphics.getWidth()/self.zoom do
 			love.graphics.line(self.adjPosX - love.graphics.getWidth()/2+prevPos, self.adjPosY - love.graphics.getHeight()/2/self.zoom, self.adjPosX - love.graphics.getWidth()/2+prevPos, self.adjPosY + love.graphics.getHeight()/2/self.zoom)
@@ -377,7 +412,7 @@ function PlaceTool:drawGrid()
 			love.graphics.line(self.adjPosX - love.graphics.getWidth()/2+prevPos, self.adjPosY - love.graphics.getHeight()/2/self.zoom, self.adjPosX - love.graphics.getWidth()/2+prevPos, self.adjPosY + love.graphics.getHeight()/2/self.zoom)
 			prevPos = prevPos-self.gridSize*self.scale
 		end
-
+		--Desenha a grid horizontal
 		local prevPos = love.graphics.getHeight()/2
 		while prevPos <  love.graphics.getHeight()/self.zoom do
 			love.graphics.line(self.adjPosX-love.graphics.getWidth()/2/self.zoom, self.adjPosY-love.graphics.getHeight()/2+prevPos,self.adjPosX+love.graphics.getWidth()/2/self.zoom, self.adjPosY-love.graphics.getHeight()/2+prevPos)
@@ -394,6 +429,7 @@ function PlaceTool:drawGrid()
 	love.graphics.line(0, 0, 0, self.adjPosY+love.graphics.getHeight()/2/self.zoom)
 end--PlaceTool:drawGrid
 
+--Checa a ordem em que os tiles serao desenhados
 function PlaceTool:checkTilesOrder()
 	local images = love.filesystem.getDirectoryItems("tiles")
 	local tilesOrderRead = io.open(self.path.."/files/tilesOrder.txt", "r")
@@ -413,6 +449,7 @@ function PlaceTool:checkTilesOrder()
 	io.close()
 end--PlaceTool:checkTilesOrder
 
+--Carrega as imagens de acordo com a ordem em tilesOrder
 function PlaceTool:loadSprites()
 	local tilesOrder = io.open(self.path.."/files/tilesOrder.txt", "r")
 	local cnt = 1
@@ -437,6 +474,7 @@ function PlaceTool:makeFavorite(favorite)
 	end
 end
 
+--Deleta o nome do arquivo do documento tilesOrder.txt
 function PlaceTool:deleteImage(tileName)
 		local readFile = io.open(self.path.."/files/tilesOrder.txt", "r")
 
@@ -451,6 +489,7 @@ function PlaceTool:deleteImage(tileName)
 		io.close()
 end --PlaceTool:deleteImage
 
+--Carrega a barra de favoritos
 function PlaceTool:loadFavorites()
 	local favorites = io.open(self.path.."/files/favorites.txt", "r")
 	local cnt = 1
@@ -462,18 +501,20 @@ function PlaceTool:loadFavorites()
 	end
 end--PlaceTool:loadFavorites
 
+--Salva a barra de favoritos no arquivo favorites.txt
 function PlaceTool:saveFavorites()
   local file = io.open(self.path.."/files/favorites.txt", "w+")
   print(io.output(file))
   io.flush()
   local textFile = ""
-  for i = 1,4 do
+  for i = 1,7 do
   	textFile = textFile..self.favorites[i].num.."\n"
   end
   io.write(textFile)
   io.close()
 end --PlaceTool:saveFavorites
 
+--Carrega as informacoes de comandos do teclado do arquivo controls.txt
 function PlaceTool:loadInfo()
 	local info = io.open(self.path.."/files/controls.txt", "r")
 	
