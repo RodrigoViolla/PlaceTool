@@ -17,3 +17,6 @@ function love.keypressed(key)
 	tool:keypressed(key)	
 end
 
+function love.quit()
+	tool:quit()
+end

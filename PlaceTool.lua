@@ -4,7 +4,7 @@ PlaceTool.__index = PlaceTool
 function PlaceTool:new()
 	local placeTool = placeTool or {}
 	setmetatable(placeTool, PlaceTool)
-	
+
 	placeTool.favorites = 
 	{
 		[1] = {num = 0, key = "Z"},
@@ -14,9 +14,11 @@ function PlaceTool:new()
 	}	
 	placeTool.scale = 5
 	placeTool.path = love.filesystem.getSource()
+	placeTool.infoText = placeTool:loadInfo()
 	placeTool.sprites = {}
 	placeTool:checkTilesOrder()
 	placeTool:loadSprites()
+	placeTool:loadFavorites()
 	placeTool.spritesTableSize = table.getn(placeTool.sprites)
 	placeTool.gridSize = 16
 	placeTool.interval = placeTool.gridSize*placeTool.scale
@@ -60,8 +62,12 @@ function PlaceTool:keypressed(key)
 	self:showGrid(key)
 end --PlaceTool:keypressed
 
+function PlaceTool:quit()
+	self:saveFavorites()
+end--PlaceTool:quit
+
 function PlaceTool:writeLocation()
-  local file = io.open(self.path.."/location/tiles.txt", "a")
+  local file = io.open(self.path.."/files/tiles.txt", "a")
   print(io.output(file))
   io.flush()
   io.write("\n"..self.adjPosX..","..self.adjPosY..","..self.currentImage)
@@ -69,7 +75,7 @@ function PlaceTool:writeLocation()
 end --PlaceTool:writeLocation
 
 function PlaceTool:getMapPositions()
-	local file = io.open(self.path.."/location/tiles.txt", "r")
+	local file = io.open(self.path.."/files/tiles.txt", "r")
 	local positions = {}
 	for line in file:lines() do
 		if(line ~= "")then
@@ -93,10 +99,10 @@ function PlaceTool:changeImg(asc)
 	end
 
 	if(self.currentImage > self.spritesTableSize)then
-		self.currentImage = 1
+		self.currentImage = self.spritesTableSize
 	end
 	if(self.currentImage < 1)then
-		self.currentImage = self.spritesTableSize
+		self.currentImage = 1
 	end
 end --PlaceTool:changeImg
 
@@ -163,9 +169,12 @@ function PlaceTool:drawToolbars()
 				
 				love.graphics.setColor(255, 255, 255)
 				love.graphics.draw(self.sprites[i+self.toolBar], x, y, 0, 3/self.zoom, 3/self.zoom)
-				love.graphics.setColor(0, 255, 0, 230)
+				if(i+self.toolBar == self.currentImage)then
+					love.graphics.setColor(0, 0, 255)
+				else
+					love.graphics.setColor(0, 255, 0, 230)
+				end
 				love.graphics.rectangle("line", x, y, self.sprites[i+self.toolBar]:getWidth()*3/self.zoom, self.sprites[i+self.toolBar]:getHeight()*3/self.zoom)
-				love.graphics.setColor(0, 255, 0, 200)
 				love.graphics.print(i, x, y, 0, 1/self.zoom)
 
 				prevPos = prevPos+self.sprites[i+self.toolBar]:getWidth()
@@ -179,10 +188,13 @@ function PlaceTool:drawToolbars()
 				local y = self.adjPosY+(love.graphics.getHeight()/2/self.zoom)-self.sprites[self.favorites[i].num]:getHeight()*3/self.zoom
 		
 				love.graphics.setColor(255, 255, 255)
-				love.graphics.draw(self.sprites[self.favorites[i].num], x, y, 0, 3/self.zoom, 3/self.zoom)
-				love.graphics.setColor(0, 255, 0, 230)
+				love.graphics.draw(self.sprites[self.favorites[i].num], x, y, 0, 3/self.zoom, 3/self.zoom)				
+				if(self.favorites[i].num == self.currentImage)then
+					love.graphics.setColor(0, 0, 255)
+				else
+					love.graphics.setColor(0, 255, 0, 230)
+				end
 				love.graphics.rectangle("line", x, y, self.sprites[self.favorites[i].num]:getWidth()*3/self.zoom, self.sprites[self.favorites[i].num]:getHeight()*3/self.zoom)
-				love.graphics.setColor(0, 255, 0, 200)
 				love.graphics.print(self.favorites[i].key, x, y, 0, 1/self.zoom)
 
 				prevPos = prevPos+self.sprites[self.favorites[i].num]:getWidth()
@@ -204,23 +216,10 @@ function PlaceTool:drawUI()
 			end
 		end
 	end
+	
 	if(self.info)then
-		local infoText = "\nUse as setas do teclado para mover o marcador"..
-						 "\n1 a 9 - Muda o sprite para o sprite de numero correspondente a barra superior"..
-						 "\nBarra de espaco - Grava as cordenadas no arquivo tiles.txt na pasta location"..
-						 "\nESC - Sair do editor"..
-						 "\nE - Muda para o proximo sprite"..
-						 "\nW - Muda para o sprite anterior"..
-						 "\nD - Deleta o tile atual"..
-						 "\n+ - Aumenta o zoom"..
-						 "\n- - Diminui o zoom"..
-						 "\n> - Proxima barra de tiles"..
-						 "\n< - Barra de tiles anterior"..
-						 "\nI - Mostra/Esconde controles do teclado"..
-						 "\nG - Mostra/Esconde a grade"..
-						 "\nF - Adiciona o sprite atual como favorito"
 		love.graphics.setColor(255, 255, 255)
-		love.graphics.print(infoText, (self.adjPosX-(love.graphics.getWidth()/2/self.zoom)), self.adjPosY-(love.graphics.getHeight()/2/self.zoom)+toolBarHeight*3/self.zoom,0,1/self.zoom)
+		love.graphics.print(self.infoText, (self.adjPosX-(love.graphics.getWidth()/2/self.zoom)), self.adjPosY-(love.graphics.getHeight()/2/self.zoom)+toolBarHeight*3/self.zoom,0,1/self.zoom)
 	else
 		love.graphics.setColor(255, 255, 255)
 		love.graphics.print("\nPressione \"i\" para mostrar comandos do teclado.", (self.adjPosX-(love.graphics.getWidth()/2/self.zoom)), self.adjPosY-(love.graphics.getHeight()/2/self.zoom)+toolBarHeight*3/self.zoom,0,1/self.zoom)
@@ -230,14 +229,14 @@ end--PlaceTool:drawUI
 function PlaceTool:deleteTile(key)
 	local x, y = self.x, self.y	
 	if(key == "d")then
-		local readFile = io.open(self.path.."/location/tiles.txt", "r")
+		local readFile = io.open(self.path.."/files/tiles.txt", "r")
 
 		fileText = readFile:read('*a')
 		readFile:close()
 		print(self.adjPosX..","..self.adjPosY..",%d*")
 		fileText = fileText:gsub("\n"..self.adjPosX..","..self.adjPosY..",%d+", '\n')
 		fileText = fileText:gsub("\n+", '\n')
-		local file = io.open(self.path.."/location/tiles.txt", "w+")
+		local file = io.open(self.path.."/files/tiles.txt", "w+")
 		print(io.output(file))
 		io.flush()
 		io.write(fileText)
@@ -281,15 +280,19 @@ end--PlaceTool:showInfo
 function PlaceTool:changeToolbar(key)
 	if(key == ".")then
 		if(self.spritesTableSize >= self.toolBar+9)then
+			self.currentImage = self.toolBar+10
 			self.toolBar = self.toolBar+9
 		end
 	end
 
 	if(key == ",")then
+
 		self.toolBar = self.toolBar-9
 		if(self.toolBar < 0)then
 			self.toolBar = 0
 		end
+
+		self.currentImage = self.toolBar+1
 	end	
 end--PlaceTool:changeToolbar
 
@@ -315,11 +318,22 @@ function PlaceTool:writeTile(key)
 end--PlaceTool:writeTile
 
 function PlaceTool:changeTileImage(key)
-	if(key == "e")then
+	if(key == "m")then
+		if((self.currentImage%9) == 0)then
+			if(self.spritesTableSize >= self.toolBar+9)then
+				self.toolBar = self.toolBar+9
+			end
+		end
 		self:changeImg(true)
 	end
 
-	if(key == "w")then
+	if(key == "n")then
+		if((self.currentImage%9) == 1)then
+			self.toolBar = self.toolBar-9
+			if(self.toolBar < 0)then
+				self.toolBar = 0
+			end
+		end
 		self:changeImg(false)
 	end
 	if(string.find(key, "%d") ~= nil)then
@@ -382,8 +396,8 @@ end--PlaceTool:drawGrid
 
 function PlaceTool:checkTilesOrder()
 	local images = love.filesystem.getDirectoryItems("tiles")
-	local tilesOrderRead = io.open(self.path.."/location/tilesOrder.txt", "r")
-	local tilesOrderWrite = io.open(self.path.."/location/tilesOrder.txt", "a")
+	local tilesOrderRead = io.open(self.path.."/files/tilesOrder.txt", "r")
+	local tilesOrderWrite = io.open(self.path.."/files/tilesOrder.txt", "a")
 	local fileText = tilesOrderRead:read('*a')
 	local isInList = nil
 
@@ -400,15 +414,15 @@ function PlaceTool:checkTilesOrder()
 end--PlaceTool:checkTilesOrder
 
 function PlaceTool:loadSprites()
-	local tilesOrder = io.open(self.path.."/location/tilesOrder.txt", "r")
+	local tilesOrder = io.open(self.path.."/files/tilesOrder.txt", "r")
 	local cnt = 1
 	for line in tilesOrder:lines()do		
 		if(love.filesystem.exists("tiles/"..line))then
 			self.sprites[cnt] = love.graphics.newImage("tiles/"..line)			
+			cnt = cnt+1
 		else
-			self.sprites[cnt] = love.graphics.newImage("icons/missingTile.png")
-		end
-		cnt = cnt+1
+			self:deleteImage(line)
+		end		
 	end
 end--PlaceTool:loadSprites
 
@@ -422,3 +436,46 @@ function PlaceTool:makeFavorite(favorite)
 		end
 	end
 end
+
+function PlaceTool:deleteImage(tileName)
+		local readFile = io.open(self.path.."/files/tilesOrder.txt", "r")
+
+		fileText = readFile:read('*a')
+		readFile:close()
+		fileText = fileText:gsub(tileName, '\n')
+		fileText = fileText:gsub("\n+", '\n')
+		local file = io.open(self.path.."/files/tilesOrder.txt", "w+")
+		print(io.output(file))
+		io.flush()
+		io.write(fileText)
+		io.close()
+end --PlaceTool:deleteImage
+
+function PlaceTool:loadFavorites()
+	local favorites = io.open(self.path.."/files/favorites.txt", "r")
+	local cnt = 1
+	for line in favorites:lines()do		
+		if(self.sprites[line*1] ~= nil)then
+			self.favorites[cnt].num = line*1
+			cnt = cnt+1
+		end
+	end
+end--PlaceTool:loadFavorites
+
+function PlaceTool:saveFavorites()
+  local file = io.open(self.path.."/files/favorites.txt", "w+")
+  print(io.output(file))
+  io.flush()
+  local textFile = ""
+  for i = 1,4 do
+  	textFile = textFile..self.favorites[i].num.."\n"
+  end
+  io.write(textFile)
+  io.close()
+end --PlaceTool:saveFavorites
+
+function PlaceTool:loadInfo()
+	local info = io.open(self.path.."/files/controls.txt", "r")
+	
+	return info:read('*a')		
+end--PlaceTool:loadInfo
