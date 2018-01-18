@@ -7,13 +7,13 @@ function PlaceTool:new()
 
 	placeTool.favorites = 
 	{
-		[1] = {num = 0, key = "Z"},
-		[2] = {num = 0, key = "X"},
-		[3] = {num = 0, key = "C"},
-		[4] = {num = 0, key = "V"},
-		[5] = {num = 0, key = "B"},
-		[6] = {num = 0, key = "N"},
-		[7] = {num = 0, key = "M"}
+		[1] = {num = 0, key = "z"},
+		[2] = {num = 0, key = "x"},
+		[3] = {num = 0, key = "c"},
+		[4] = {num = 0, key = "v"},
+		[5] = {num = 0, key = "b"},
+		[6] = {num = 0, key = "n"},
+		[7] = {num = 0, key = "m"}
 	}	
 	placeTool.speed = 1000
 	placeTool.scale = 5
@@ -56,14 +56,39 @@ end --PlaceTool:draw
 
 function PlaceTool:keypressed(key)
 	self:manageFavotites(key)
-	self:showInfo(key)
-	self:changeToolbar(key)
-	self:changeTile(key)
-	self:changeZoom(key)
-	self:writeTile(key)
-	self:deleteTile(key)
-	self:quitEditor(key)
-	self:showGrid(key)
+	if(key == "i")then
+		self:showInfo()
+	end
+	if(key == ".")then
+		self:changeToolbar(true)
+	end
+	if(key == ",")then
+		self:changeToolbar(false)
+	end
+	if(key == "/" or string.find(key, "%d") ~= nil)then
+		self:changeTile(true, key)
+	end
+	if(key == ";" or string.find(key, "%d") ~= nil)then
+		self:changeTile(false, key)
+	end
+	if(key == "=")then
+		self:changeZoom(true)
+	end
+	if(key == "-")then
+		self:changeZoom(false)
+	end
+	if(key == " ")then
+		self:writeTile()
+	end
+	if(key == "d")then
+		self:deleteTile()
+	end
+	if(key == "escape")then
+		love.event.quit()
+	end
+	if(key == "g")then
+		self:showGrid()
+	end
 end --PlaceTool:keypressed
 
 function PlaceTool:quit()
@@ -208,7 +233,7 @@ function PlaceTool:drawToolbars()
 					love.graphics.setColor(0, 255, 0, 230)
 				end
 				love.graphics.rectangle("line", x, y, self.sprites[self.favorites[i].num]:getWidth()*3/self.zoom, self.sprites[self.favorites[i].num]:getHeight()*3/self.zoom)
-				love.graphics.print(self.favorites[i].key, x, y, 0, 1/self.zoom)
+				love.graphics.print(self.favorites[i].key:upper(), x, y, 0, 1/self.zoom)
 
 				prevPos = prevPos+self.sprites[self.favorites[i].num]:getWidth()
 		end
@@ -243,21 +268,19 @@ end--PlaceTool:drawUI
 --Deleta as cordenadas do arquivo tiles.txt de acordo com a posicao da ferramenta
 function PlaceTool:deleteTile(key)
 	local x, y = self.x, self.y	
-	if(key == "d")then
-		local readFile = io.open(self.path.."/files/tiles.txt", "r")
+	local readFile = io.open(self.path.."/files/tiles.txt", "r")
 
-		fileText = readFile:read('*a')
-		readFile:close()
-		print(self.adjPosX..","..self.adjPosY..",%d*")
-		fileText = fileText:gsub("\n"..self.adjPosX..","..self.adjPosY..",%d+", '\n')
-		fileText = fileText:gsub("\n+", '\n')
-		local file = io.open(self.path.."/files/tiles.txt", "w+")
-		print(io.output(file))
-		io.flush()
-		io.write(fileText)
-		io.close()
-		self:updateMap()
-	end
+	fileText = readFile:read('*a')
+	readFile:close()
+	print(self.adjPosX..","..self.adjPosY..",%d*")
+	fileText = fileText:gsub("\n"..self.adjPosX..","..self.adjPosY..",%d+", '\n')
+	fileText = fileText:gsub("\n+", '\n')
+	local file = io.open(self.path.."/files/tiles.txt", "w+")
+	print(io.output(file))
+	io.flush()
+	io.write(fileText)
+	io.close()
+	self:updateMap()
 end --PlaceTool:deleteTile
 
 --Define a barra de favoritos
@@ -266,75 +289,44 @@ function PlaceTool:manageFavotites(key)
 		self.favoritesSelect = true
 	end
 
-	if(key == "z")then
-		self:makeFavorite(1)
-	end
-
-	if(key == "x")then
-		self:makeFavorite(2)
-	end
-
-	if(key == "c")then
-		self:makeFavorite(3)
-	end
-
-	if(key == "v")then
-		self:makeFavorite(4)
-	end
-
-	if(key == "b")then
-		self:makeFavorite(5)
-	end
-
-	if(key == "n")then
-		self:makeFavorite(6)
-	end
-
-	if(key == "m")then
-		self:makeFavorite(7)
+	for i, fav in ipairs(self.favorites)do
+		if(key == fav.key)then
+			self:makeFavorite(i)
+		end
 	end
 end--PlaceTool:manageFavotites
 
 --Mostra as informacoes de controles
 function PlaceTool:showInfo(key)
-	if(key == "i")then
-		if(self.info)then
-			self.info = false
-		else
-			self.info = true
-		end
-	end
+	if(self.info)then
+		self.info = false
+	else
+		self.info = true
+	end	
 end--PlaceTool:showInfo
 
 --Muda a barra de tiles para a proxima barra
-function PlaceTool:changeToolbar(key)
-	if(key == ".")then
+function PlaceTool:changeToolbar(next)
+	if(next)then
 		if(self.spritesTableSize >= self.toolBar+9)then
 			self.currentImage = self.toolBar+10
 			self.toolBar = self.toolBar+9
 		end
-	end
-
-	if(key == ",")then
-
-		self.toolBar = self.toolBar-9
-		if(self.toolBar < 0)then
-			self.toolBar = 0
+	else		
+		if(self.toolBar > 0)then
+			self.toolBar = self.toolBar-9
+			self.currentImage = self.toolBar+1
 		end
-
-		self.currentImage = self.toolBar+1
 	end	
 end--PlaceTool:changeToolbar
 
 --Muda o zoom da camera
-function PlaceTool:changeZoom(key)
-	if(key == "=")then
+function PlaceTool:changeZoom(zoom)
+	if(zoom)then
 		if(self.zoom < 1)then
 			self.zoom = self.zoom+0.1
 		end
-	end
-
-	if(key == "-")then		
+	else
 		if(self.zoom > 0.2)then
 			self.zoom = self.zoom-0.1
 		end
@@ -342,25 +334,21 @@ function PlaceTool:changeZoom(key)
 end--PlaceTool:changeZoom
 
 --Insere um tile no arquivo tiles.txt
-function PlaceTool:writeTile(key)
-	if(key == " ")then
-		self:writeLocation()
-		self:updateMap()
-	end
+function PlaceTool:writeTile()
+	self:writeLocation()
+	self:updateMap()
 end--PlaceTool:writeTile
 
 --Muda o tile selecionado para o proximo/anterior da lista
-function PlaceTool:changeTile(key)
-	if(key == "/")then
+function PlaceTool:changeTile(next, key)
+	if(next)then
 		if((self.currentImage%9) == 0)then
 			if(self.spritesTableSize >= self.toolBar+9)then
 				self.toolBar = self.toolBar+9
 			end
 		end
 		self:changeImg(true)
-	end
-
-	if(key == ";")then
+	else
 		if((self.currentImage%9) == 1)then
 			self.toolBar = self.toolBar-9
 			if(self.toolBar < 0)then
@@ -369,6 +357,7 @@ function PlaceTool:changeTile(key)
 		end
 		self:changeImg(false)
 	end
+
 	if(string.find(key, "%d") ~= nil)then
 		if(self.sprites[string.gsub(key, "%a+", '')+self.toolBar] ~= nil)then
 				self.currentImage = string.gsub(key, "%a+", '')+self.toolBar
@@ -376,20 +365,12 @@ function PlaceTool:changeTile(key)
 	end
 end--PlaceTool:changeTile
 
-function PlaceTool:quitEditor(key)
-	if(key == "escape")then
-		love.event.quit()
-	end
-end--PlaceTool:quitEditor
-
 function PlaceTool:showGrid(key)
-	if(key == "g")then
-		if(self.grid)then
-			self.grid = false
-		else
-			self.grid = true
-		end
-	end
+	if(self.grid)then
+		self.grid = false
+	else
+		self.grid = true
+	end	
 end--PlaceTool:showGrid
 
 function PlaceTool:updateMap()
