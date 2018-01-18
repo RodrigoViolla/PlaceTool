@@ -1,7 +1,7 @@
 PlaceTool = {}
 PlaceTool.__index = PlaceTool
 
-function PlaceTool:new()
+function PlaceTool:new(world)
 	local placeTool = placeTool or {}
 	setmetatable(placeTool, PlaceTool)
 
@@ -15,6 +15,9 @@ function PlaceTool:new()
 		[6] = {num = 0, key = "n"},
 		[7] = {num = 0, key = "m"}
 	}	
+	placeTool.world = world
+	placeTool.colliders = {}
+	placeTool.colliderMode = true
 	placeTool.speed = 1000
 	placeTool.scale = 5
 	placeTool.path = love.filesystem.getSource()
@@ -37,6 +40,7 @@ function PlaceTool:new()
 	placeTool.info = false
 	placeTool.grid = true
 	placeTool.favoritesSelect = false
+	placeTool:loadColliders()
 
 	return placeTool
 end --PlaceTool:new
@@ -48,6 +52,7 @@ end --PlaceTool:update
 function PlaceTool:draw()
 	self:manageCamera()
 	self:drawMap()
+	self:drawColliders()
 	self:drawGrid()
 	self:drawTool()
 	self:drawToolbars()
@@ -56,6 +61,9 @@ end --PlaceTool:draw
 
 function PlaceTool:keypressed(key)
 	self:manageFavotites(key)
+	if(key == "a")then
+		self:showColliders()
+	end
 	if(key == "i")then
 		self:showInfo()
 	end
@@ -93,6 +101,7 @@ end --PlaceTool:keypressed
 
 function PlaceTool:quit()
 	self:saveFavorites()
+	self:saveColliders()
 end--PlaceTool:quit
 
 --Grava as cordenadas do tile no arquivo tiles.txt
@@ -281,6 +290,7 @@ function PlaceTool:deleteTile(key)
 	io.write(fileText)
 	io.close()
 	self:updateMap()
+	self:deleteCollider()
 end --PlaceTool:deleteTile
 
 --Define a barra de favoritos
@@ -335,6 +345,7 @@ end--PlaceTool:changeZoom
 
 --Insere um tile no arquivo tiles.txt
 function PlaceTool:writeTile()
+	self:createCollider(self.adjPosX, self.adjPosY)
 	self:writeLocation()
 	self:updateMap()
 end--PlaceTool:writeTile
@@ -501,3 +512,72 @@ function PlaceTool:loadInfo()
 	
 	return info:read('*a')		
 end--PlaceTool:loadInfo
+
+function PlaceTool:createCollider(x, y)
+	if(self.colliderMode)then
+		local collider = {}
+		collider.tileX, collider.tileY = x, y
+		collider.x = x+self.sprites[self.currentImage]:getWidth()*self.scale/2
+		collider.y = y+self.sprites[self.currentImage]:getHeight()*self.scale/2
+		collider.body = love.physics.newBody(self.world, collider.x, collider.y) 
+		collider.shape = love.physics.newRectangleShape(self.sprites[self.currentImage]:getWidth()*self.scale, self.sprites[self.currentImage]:getHeight()*self.scale) 
+		collider.fixture = love.physics.newFixture(collider.body, collider.shape)
+
+		table.insert(self.colliders, collider)
+	end
+end--PlaceTool:createCollider
+
+function PlaceTool:drawColliders()
+	if(self.colliderMode)then
+		for i, collider in ipairs(self.colliders)do
+			love.graphics.setColor(72, 160, 14, 150)
+	    	love.graphics.polygon("fill", collider.body:getWorldPoints(collider.shape:getPoints()))
+		end
+	end
+end--PlaceTool:drawColliders
+
+function PlaceTool:deleteCollider()
+	local deletePosX = self.adjPosX+self.sprites[self.currentImage]:getWidth()*self.scale/2
+	local deletePosY = self.adjPosY+self.sprites[self.currentImage]:getHeight()*self.scale/2
+
+	for i, collider in ipairs(self.colliders)do
+		if(collider.x == deletePosX and collider.y == deletePosY)then
+			table.remove(self.colliders, i)
+		end
+	end
+end--PlaceTool:deleteCollider
+
+function PlaceTool:loadColliders()
+	local file = io.open(self.path.."/files/colliders.txt", "r")
+	for line in file:lines() do
+		if(line ~= "")then
+			local linePositions = {}
+			for num in line:gmatch"%d+" do
+					print(num)
+					table.insert(linePositions, num) 
+			end			
+			self:createCollider(linePositions[1], linePositions[2])
+		end
+	end
+end--PlaceTool:loadColliders
+
+function PlaceTool:saveColliders()
+	local collidersText = ""
+	for i, collider in ipairs(self.colliders)do
+		collidersText = collidersText..collider.tileX..","..collider.tileY.."\n"
+	end
+
+	local file = io.open(self.path.."/files/colliders.txt", "w+")
+	print(io.output(file))
+	io.flush()
+	io.write(collidersText)
+	io.close()
+end --PlaceTool:saveColliders
+
+function PlaceTool:showColliders()
+	if(self.colliderMode)then
+		self.colliderMode = false
+	else
+		self.colliderMode = true
+	end
+end--PlaceTool:showColliders

@@ -9,6 +9,7 @@ IMPORTANTE: Os arquivos não podem conter espaços no nome.<br><br>
 TECLAS<br><br>
   Use as setas do teclado para mover o marcador<br>
   1 a 9 - Muda o sprite para o sprite de numero correspondente a barra superior<br>
+  "A" - Ativa/Desativa o modo de colliders<br>
   "Q" - Grava as cordenadas no arquivo tiles.txt na pasta location<br>
   "ESC" - Sair do editor<br>
   ";" - Muda para o proximo sprite<br>

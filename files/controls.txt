@@ -3,6 +3,7 @@ Use as setas do teclado para mover o marcador
 1 a 9 - Muda o sprite para o sprite de numero correspondente a barra superior
 Barra de espaco - Grava as cordenadas no arquivo tiles.txt na pasta location
 ESC - Sair do editor
+A - Ativa/Desativa o modo de colliders
 : - Muda para o proximo sprite
 / - Muda para o sprite anterior
 D - Deleta o tile atual

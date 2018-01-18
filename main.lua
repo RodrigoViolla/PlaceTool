@@ -2,7 +2,8 @@ require "PlaceTool"
 
 function love.load()	
 	love.graphics.setDefaultFilter("nearest", "nearest")
-	tool = PlaceTool:new()		
+	world = love.physics.newWorld(0, 0)
+	tool = PlaceTool:new(world)		
 end
 
 function love.update(dt)
