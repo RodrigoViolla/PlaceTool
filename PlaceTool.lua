@@ -17,7 +17,7 @@ function PlaceTool:new(world)
 	}	
 	placeTool.world = world
 	placeTool.colliders = {}
-	placeTool.colliderMode = true
+	placeTool.colliderMode = false
 	placeTool.speed = 1000
 	placeTool.scale = 5
 	placeTool.path = love.filesystem.getSource()
@@ -36,7 +36,7 @@ function PlaceTool:new(world)
 	placeTool.posY = 0
 	placeTool.currentImage = 1
 	placeTool.zoom = 1
-	placeTool.toolBar = 0
+	placeTool.toolbar = 0
 	placeTool.info = false
 	placeTool.grid = true
 	placeTool.favoritesSelect = false
@@ -152,7 +152,7 @@ function PlaceTool:moveTool(dt)
 	if(love.keyboard.isDown("right"))then
 		self.posX = self.posX+dt*self.speed		
 		if(self.posX > self.adjPosX+self.interval)then
-			self.adjPosX = self.adjPosX+self.interval;
+			self.adjPosX = self.adjPosX+self.interval
 		end
 	end
 
@@ -161,7 +161,7 @@ function PlaceTool:moveTool(dt)
 			self.posX = self.posX-dt*self.speed
 		end
 		if(self.posX < self.adjPosX-self.interval)then
-			self.adjPosX = self.adjPosX-self.interval;
+			self.adjPosX = self.adjPosX-self.interval
 		end
 	end
 
@@ -170,14 +170,14 @@ function PlaceTool:moveTool(dt)
 			self.posY = self.posY-dt*self.speed
 		end
 		if(self.posY < self.adjPosY-self.interval)then
-			self.adjPosY = self.adjPosY-self.interval;
+			self.adjPosY = self.adjPosY-self.interval
 		end
 	end
 
 	if(love.keyboard.isDown("down"))then
 		self.posY = self.posY+dt*self.speed
 		if(self.posY > self.adjPosY+self.interval)then
-			self.adjPosY = self.adjPosY+self.interval;
+			self.adjPosY = self.adjPosY+self.interval
 		end
 	end
 end--PlaceTool:moveTool
@@ -199,32 +199,43 @@ end--PlaceTool:drawMap
 
 --Desenha o sprite da ferramenta de acordo com self.currentImage
 function PlaceTool:drawTool()
-	love.graphics.setColor(0, 0, 255)
+	if(self.colliderMode)then
+		love.graphics.setColor(0, 255, 0)
+	else
+		love.graphics.setColor(0, 0, 255)
+	end
 	love.graphics.rectangle('line', self.adjPosX, self.adjPosY, self.sprites[self.currentImage]:getWidth()*self.scale, self.sprites[self.currentImage]:getHeight()*self.scale)
-	love.graphics.setColor(255, 255, 255, 150)
-	love.graphics.draw(self.sprites[self.currentImage], self.adjPosX, self.adjPosY, 0, 5, 5)
+	if(not self.colliderMode)then
+		love.graphics.setColor(255, 255, 255, 150)
+		love.graphics.draw(self.sprites[self.currentImage], self.adjPosX, self.adjPosY, 0, 5, 5)
+	end
 end--PlaceTool:drawTool
 
 --Desenha a barra de tiles e a barra de favoritos
 function PlaceTool:drawToolbars()
+	local alpha = 255
+	if(self.colliderMode)then
+		alpha = 150
+	end
+
 	--Barra de tiles
 	local prevPos = self.sprites[1]:getWidth()
 	for i = 1,9 do
-		if(self.sprites[i+self.toolBar] ~= nil)then
+		if(self.sprites[i+self.toolbar] ~= nil)then
 				local x = (self.adjPosX-(love.graphics.getWidth()/2/self.zoom)+prevPos*3/self.zoom)-self.sprites[1]:getWidth()*3/self.zoom
 				local y = self.adjPosY-(love.graphics.getHeight()/2/self.zoom)
 				
-				love.graphics.setColor(255, 255, 255)
-				love.graphics.draw(self.sprites[i+self.toolBar], x, y, 0, 3/self.zoom, 3/self.zoom)
-				if(i+self.toolBar == self.currentImage)then
-					love.graphics.setColor(0, 0, 255)
+				love.graphics.setColor(255, 255, 255, alpha)
+				love.graphics.draw(self.sprites[i+self.toolbar], x, y, 0, 3/self.zoom, 3/self.zoom)
+				if(i+self.toolbar == self.currentImage)then
+					love.graphics.setColor(0, 0, 255, alpha)
 				else
-					love.graphics.setColor(0, 255, 0, 230)
+					love.graphics.setColor(0, 255, 0, alpha)
 				end
-				love.graphics.rectangle("line", x, y, self.sprites[i+self.toolBar]:getWidth()*3/self.zoom, self.sprites[i+self.toolBar]:getHeight()*3/self.zoom)
+				love.graphics.rectangle("line", x, y, self.sprites[i+self.toolbar]:getWidth()*3/self.zoom, self.sprites[i+self.toolbar]:getHeight()*3/self.zoom)
 				love.graphics.print(i, x, y, 0, 1/self.zoom)
 
-				prevPos = prevPos+self.sprites[i+self.toolBar]:getWidth()
+				prevPos = prevPos+self.sprites[i+self.toolbar]:getWidth()
 		end
 	end
 	--Barra de favoritos
@@ -234,12 +245,12 @@ function PlaceTool:drawToolbars()
 				local x = (self.adjPosX-(love.graphics.getWidth()/2/self.zoom)+prevPos*3/self.zoom)-self.sprites[1]:getWidth()*3/self.zoom
 				local y = self.adjPosY+(love.graphics.getHeight()/2/self.zoom)-self.sprites[self.favorites[i].num]:getHeight()*3/self.zoom
 		
-				love.graphics.setColor(255, 255, 255)
+				love.graphics.setColor(255, 255, 255, alpha)
 				love.graphics.draw(self.sprites[self.favorites[i].num], x, y, 0, 3/self.zoom, 3/self.zoom)				
 				if(self.favorites[i].num == self.currentImage)then
-					love.graphics.setColor(0, 0, 255)
+					love.graphics.setColor(0, 0, 255, alpha)
 				else
-					love.graphics.setColor(0, 255, 0, 230)
+					love.graphics.setColor(0, 255, 0, alpha)
 				end
 				love.graphics.rectangle("line", x, y, self.sprites[self.favorites[i].num]:getWidth()*3/self.zoom, self.sprites[self.favorites[i].num]:getHeight()*3/self.zoom)
 				love.graphics.print(self.favorites[i].key:upper(), x, y, 0, 1/self.zoom)
@@ -251,52 +262,74 @@ end--PlaceTool:drawToolbars
 
 --Desenha a interface do usuario
 function PlaceTool:drawUI()
-	love.graphics.setColor(0, 255, 0)
+	local text = ""
+	local limit = 400
+
+	love.graphics.setColor(255, 255, 255)
 	if(self.favoritesSelect)then
-		love.graphics.print("Pressione Z, X, C, V, B, N ou M para marcar o sprite atual como favorito.", self.adjPosX-love.graphics.getWidth()/4/self.zoom, self.adjPosY,0,1/self.zoom)
+		text = "Pressione \"Z\", \"X\", \"C\", \"V\", \"B\", \"N\" ou \"M\" para marcar o sprite atual como favorito.\nPressione \"F\" para cancelar."
+		love.graphics.printf(text, self.adjPosX-limit/2/self.zoom, self.adjPosY, limit, "center", 0,1/self.zoom,1/self.zoom, 0, 0, 0, 0)
 	end
 
-	local toolBarHeight = 0
+	local toolbarHeight = 0
+	local toolbarWidth = 0
 	for i = 1,9 do
-		if(self.sprites[i+self.toolBar] ~= nil)then
-			if(self.sprites[i+self.toolBar]:getHeight() > toolBarHeight)then
-				toolBarHeight = self.sprites[i+self.toolBar]:getHeight()
+		if(self.sprites[i+self.toolbar] ~= nil)then
+			if(self.sprites[i+self.toolbar]:getHeight() > toolbarHeight)then
+				toolbarHeight = self.sprites[i+self.toolbar]:getHeight()
 			end
+
+			toolbarWidth = toolbarWidth+self.sprites[i+self.toolbar]:getWidth()
 		end
 	end
 	
-	if(self.info)then
-		love.graphics.setColor(255, 255, 255)
-		love.graphics.print(self.infoText, (self.adjPosX-(love.graphics.getWidth()/2/self.zoom)), self.adjPosY-(love.graphics.getHeight()/2/self.zoom)+toolBarHeight*3/self.zoom,0,1/self.zoom)
+	local colliderText = ""
+	if(self.colliderMode)then
+		love.graphics.setColor(0, 255, 0)
+		colliderText = "Pressione \"A\" para desativar o modo de colisores"
 	else
 		love.graphics.setColor(255, 255, 255)
-		love.graphics.print("\nPressione \"i\" para mostrar comandos do teclado.", (self.adjPosX-(love.graphics.getWidth()/2/self.zoom)), self.adjPosY-(love.graphics.getHeight()/2/self.zoom)+toolBarHeight*3/self.zoom,0,1/self.zoom)
+		colliderText = "Pressione \"A\" para ativar o modo de colisores"
 	end
+
+	if(self.info)then
+		text = self.infoText
+	else
+		text = colliderText.."\nPressione \"I\" para mostrar comandos do teclado."
+	end
+
+	love.graphics.print(text, (self.adjPosX-(love.graphics.getWidth()/2/self.zoom))+toolbarWidth*3.1/self.zoom, self.adjPosY-(love.graphics.getHeight()/2/self.zoom),0,1/self.zoom)
 end--PlaceTool:drawUI
 
 --Deleta as cordenadas do arquivo tiles.txt de acordo com a posicao da ferramenta
-function PlaceTool:deleteTile(key)
-	local x, y = self.x, self.y	
-	local readFile = io.open(self.path.."/files/tiles.txt", "r")
+function PlaceTool:deleteTile()
+	if(self.colliderMode)then
+		self:deleteCollider()
+	else
+		local x, y = self.x, self.y	
+		local readFile = io.open(self.path.."/files/tiles.txt", "r")
 
-	fileText = readFile:read('*a')
-	readFile:close()
-	print(self.adjPosX..","..self.adjPosY..",%d*")
-	fileText = fileText:gsub("\n"..self.adjPosX..","..self.adjPosY..",%d+", '\n')
-	fileText = fileText:gsub("\n+", '\n')
-	local file = io.open(self.path.."/files/tiles.txt", "w+")
-	print(io.output(file))
-	io.flush()
-	io.write(fileText)
-	io.close()
-	self:updateMap()
-	self:deleteCollider()
+		fileText = readFile:read('*a')
+		readFile:close()
+		fileText = fileText:gsub("\n"..self.adjPosX..","..self.adjPosY..",%d+", '\n')
+		fileText = fileText:gsub("\n+", '\n')
+		local file = io.open(self.path.."/files/tiles.txt", "w+")
+		print(io.output(file))
+		io.flush()
+		io.write(fileText)
+		io.close()
+		self:updateMap()
+	end
 end --PlaceTool:deleteTile
 
 --Define a barra de favoritos
 function PlaceTool:manageFavotites(key)
 	if(key == "f")then
-		self.favoritesSelect = true
+		if(self.favoritesSelect)then
+			self.favoritesSelect = false
+		else
+			self.favoritesSelect = true
+		end
 	end
 
 	for i, fav in ipairs(self.favorites)do
@@ -318,14 +351,14 @@ end--PlaceTool:showInfo
 --Muda a barra de tiles para a proxima barra
 function PlaceTool:changeToolbar(next)
 	if(next)then
-		if(self.spritesTableSize >= self.toolBar+9)then
-			self.currentImage = self.toolBar+10
-			self.toolBar = self.toolBar+9
+		if(self.spritesTableSize >= self.toolbar+9)then
+			self.currentImage = self.toolbar+10
+			self.toolbar = self.toolbar+9
 		end
 	else		
-		if(self.toolBar > 0)then
-			self.toolBar = self.toolBar-9
-			self.currentImage = self.toolBar+1
+		if(self.toolbar > 0)then
+			self.toolbar = self.toolbar-9
+			self.currentImage = self.toolbar+1
 		end
 	end	
 end--PlaceTool:changeToolbar
@@ -345,33 +378,36 @@ end--PlaceTool:changeZoom
 
 --Insere um tile no arquivo tiles.txt
 function PlaceTool:writeTile()
-	self:createCollider(self.adjPosX, self.adjPosY)
-	self:writeLocation()
+	if(self.colliderMode)then
+		self:createCollider(self.adjPosX, self.adjPosY)
+	else
+		self:writeLocation()
+	end
 	self:updateMap()
 end--PlaceTool:writeTile
 
 --Muda o tile selecionado para o proximo/anterior da lista
 function PlaceTool:changeTile(next, key)
-	if(next)then
-		if((self.currentImage%9) == 0)then
-			if(self.spritesTableSize >= self.toolBar+9)then
-				self.toolBar = self.toolBar+9
-			end
-		end
-		self:changeImg(true)
-	else
-		if((self.currentImage%9) == 1)then
-			self.toolBar = self.toolBar-9
-			if(self.toolBar < 0)then
-				self.toolBar = 0
-			end
-		end
-		self:changeImg(false)
-	end
-
 	if(string.find(key, "%d") ~= nil)then
-		if(self.sprites[string.gsub(key, "%a+", '')+self.toolBar] ~= nil)then
-				self.currentImage = string.gsub(key, "%a+", '')+self.toolBar
+		if(self.sprites[string.gsub(key, "%a+", '')+self.toolbar] ~= nil)then
+				self.currentImage = string.gsub(key, "%a+", '')+self.toolbar
+		end
+	else
+		if(next)then
+			if((self.currentImage%9) == 0)then
+				if(self.spritesTableSize >= self.toolbar+9)then
+					self.toolbar = self.toolbar+9
+				end
+			end
+			self:changeImg(true)
+		else
+			if((self.currentImage%9) == 1)then
+				self.toolbar = self.toolbar-9
+				if(self.toolbar < 0)then
+					self.toolbar = 0
+				end
+			end
+			self:changeImg(false)
 		end
 	end
 end--PlaceTool:changeTile
@@ -430,7 +466,7 @@ function PlaceTool:checkTilesOrder()
 	local isInList = nil
 
 	for cnt, tile in ipairs(images)do
-		isInList = fileText:find(tile.."+");
+		isInList = fileText:find(tile.."+")
 
 		if(isInList == nil)then
 			print(io.output(tilesOrderWrite))
@@ -514,23 +550,21 @@ function PlaceTool:loadInfo()
 end--PlaceTool:loadInfo
 
 function PlaceTool:createCollider(x, y)
-	if(self.colliderMode)then
-		local collider = {}
-		collider.tileX, collider.tileY = x, y
-		collider.x = x+self.sprites[self.currentImage]:getWidth()*self.scale/2
-		collider.y = y+self.sprites[self.currentImage]:getHeight()*self.scale/2
-		collider.body = love.physics.newBody(self.world, collider.x, collider.y) 
-		collider.shape = love.physics.newRectangleShape(self.sprites[self.currentImage]:getWidth()*self.scale, self.sprites[self.currentImage]:getHeight()*self.scale) 
-		collider.fixture = love.physics.newFixture(collider.body, collider.shape)
+	local collider = {}
+	collider.tileX, collider.tileY = x, y
+	collider.x = x+self.sprites[self.currentImage]:getWidth()*self.scale/2
+	collider.y = y+self.sprites[self.currentImage]:getHeight()*self.scale/2
+	collider.body = love.physics.newBody(self.world, collider.x, collider.y) 
+	collider.shape = love.physics.newRectangleShape(self.sprites[self.currentImage]:getWidth()*self.scale, self.sprites[self.currentImage]:getHeight()*self.scale) 
+	collider.fixture = love.physics.newFixture(collider.body, collider.shape)
 
-		table.insert(self.colliders, collider)
-	end
+	table.insert(self.colliders, collider)
 end--PlaceTool:createCollider
 
 function PlaceTool:drawColliders()
 	if(self.colliderMode)then
 		for i, collider in ipairs(self.colliders)do
-			love.graphics.setColor(72, 160, 14, 150)
+			love.graphics.setColor(0, 255, 0, 100)
 	    	love.graphics.polygon("fill", collider.body:getWorldPoints(collider.shape:getPoints()))
 		end
 	end
@@ -553,7 +587,6 @@ function PlaceTool:loadColliders()
 		if(line ~= "")then
 			local linePositions = {}
 			for num in line:gmatch"%d+" do
-					print(num)
 					table.insert(linePositions, num) 
 			end			
 			self:createCollider(linePositions[1], linePositions[2])
