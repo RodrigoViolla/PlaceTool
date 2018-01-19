@@ -29,7 +29,7 @@ function PlaceTool:new(world)
 	placeTool.spritesTableSize = table.getn(placeTool.sprites)
 	placeTool.gridSize = 16
 	placeTool.interval = placeTool.gridSize*placeTool.scale
-	placeTool.mapPositions = placeTool:getMapPositions()
+	placeTool.mapPositions = placeTool:loadMapPositions()
 	placeTool.adjPosX = 0
 	placeTool.adjPosY = 0
 	placeTool.posX = 0
@@ -102,19 +102,18 @@ end --PlaceTool:keypressed
 function PlaceTool:quit()
 	self:saveFavorites()
 	self:saveColliders()
+	self:saveMapPositions()
 end--PlaceTool:quit
 
 --Grava as cordenadas do tile no arquivo tiles.txt
 function PlaceTool:writeLocation()
-  local file = io.open(self.path.."/files/tiles.txt", "a")
-  print(io.output(file))
-  io.flush()
-  io.write("\n"..self.adjPosX..","..self.adjPosY..","..self.currentImage)
-  io.close()
+  local position = {x = self.adjPosX, y = self.adjPosY, sprite = self.currentImage} 
+
+  table.insert(self.mapPositions, position)
 end --PlaceTool:writeLocation
 
 --Carrega as cordenadas dos tiles do arquivo tiles.txt e guarda em uma table
-function PlaceTool:getMapPositions()
+function PlaceTool:loadMapPositions()
 	local file = io.open(self.path.."/files/tiles.txt", "r")
 	local positions = {}
 	for line in file:lines() do
@@ -129,7 +128,21 @@ function PlaceTool:getMapPositions()
 	end
 	
 	return positions
-end --PlaceTool:getMapPositions
+end --PlaceTool:loadMapPositions
+
+function PlaceTool:saveMapPositions(...)
+	local file = io.open(self.path.."/files/tiles.txt", "w+")
+	local textFile = ""
+
+	for i, position in ipairs(self.mapPositions)do
+		textFile = textFile.."\n"..position.x..","..position.y..","..position.sprite
+	end
+
+  	print(io.output(file))
+  	io.flush()
+  	io.write(textFile)
+	io.close()
+end--PlaceTool:saveMapPositions
 
 --Muda o contador da imagem do tile atual
 function PlaceTool:changeImg(asc)
@@ -306,19 +319,12 @@ function PlaceTool:deleteTile()
 	if(self.colliderMode)then
 		self:deleteCollider()
 	else
-		local x, y = self.x, self.y	
-		local readFile = io.open(self.path.."/files/tiles.txt", "r")
-
-		fileText = readFile:read('*a')
-		readFile:close()
-		fileText = fileText:gsub("\n"..self.adjPosX..","..self.adjPosY..",%d+", '\n')
-		fileText = fileText:gsub("\n+", '\n')
-		local file = io.open(self.path.."/files/tiles.txt", "w+")
-		print(io.output(file))
-		io.flush()
-		io.write(fileText)
-		io.close()
-		self:updateMap()
+		for i, position in ipairs(self.mapPositions)do
+			print("X Array: "..position.x.." Cursor:"..self.adjPosX.." | Y Array:"..position.y.." Cursor:"..self.adjPosY)			
+			if(position.x*1 == self.adjPosX and position.y*1 == self.adjPosY)then
+				table.remove(self.mapPositions, i)
+			end
+		end
 	end
 end --PlaceTool:deleteTile
 
@@ -383,7 +389,6 @@ function PlaceTool:writeTile()
 	else
 		self:writeLocation()
 	end
-	self:updateMap()
 end--PlaceTool:writeTile
 
 --Muda o tile selecionado para o proximo/anterior da lista
@@ -421,7 +426,7 @@ function PlaceTool:showGrid(key)
 end--PlaceTool:showGrid
 
 function PlaceTool:updateMap()
-	self.mapPositions = self:getMapPositions()
+	self.mapPositions = self:loadMapPositions()
 end--PlaceTool:updateMap
 
 --Desenha a grid do mapa
