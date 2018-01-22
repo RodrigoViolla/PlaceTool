@@ -33,12 +33,14 @@ function PlaceTool:new(world)
 		zoomIn = {key = "=", desc = "="},
 		zoomOut = {key = "-", desc = "-"},
 		exit = {key = "escape", desc = "ESC"},
-		draw = {key = " ", desc = "BARRA DE ESPAÇO"}
+		draw = {key = " ", desc = "BARRA DE ESPAÇO"},
+		highSpeed = {key = "lshift", desc = "SHIFT ESQUERDO"},
+		lowSpeed = {key = "lctrl", desc = "CONTROL ESQUERDO"}
 	}
 	placeTool.world = world
 	placeTool.colliders = {}
 	placeTool.colliderMode = false
-	placeTool.speed = 1000
+	placeTool.speed = 50000
 	placeTool.scale = 5
 	placeTool.path = love.filesystem.getSource()
 	placeTool.infoText = placeTool:loadInfo()
@@ -117,6 +119,12 @@ function PlaceTool:keypressed(key)
 	if(key == self.keys.grid.key)then
 		self:showGrid()
 	end
+	if(key == self.keys.highSpeed.key)then
+		self:changeSpeed(true)
+	end
+	if(key == self.keys.lowSpeed.key)then
+		self:changeSpeed(false)
+	end
 end --PlaceTool:keypressed
 
 function PlaceTool:quit()
@@ -183,33 +191,33 @@ end --PlaceTool:changeImg
 --Move a ferramenta de desenho
 function PlaceTool:moveTool(dt)
 	if(love.keyboard.isDown(self.keys.right.key))then
-		self.posX = self.posX+dt*self.speed		
-		if(self.posX > self.adjPosX+self.interval)then
+		self.posX = self.posX+dt*self.speed * dt		
+		if(self.posX > self.adjPosX+self.interval/2)then
 			self.adjPosX = self.adjPosX+self.interval
 		end
 	end
 
 	if(love.keyboard.isDown(self.keys.left.key))then
 		if(self.adjPosX > 0)then
-			self.posX = self.posX-dt*self.speed
+			self.posX = self.posX-dt*self.speed * dt
 		end
-		if(self.posX < self.adjPosX-self.interval)then
+		if(self.posX < self.adjPosX-self.interval/2)then
 			self.adjPosX = self.adjPosX-self.interval
 		end
 	end
 
 	if(love.keyboard.isDown(self.keys.up.key))then
 		if(self.adjPosY > 0)then
-			self.posY = self.posY-dt*self.speed
+			self.posY = self.posY-dt*self.speed * dt
 		end
-		if(self.posY < self.adjPosY-self.interval)then
+		if(self.posY < self.adjPosY-self.interval/2)then
 			self.adjPosY = self.adjPosY-self.interval
 		end
 	end
 
 	if(love.keyboard.isDown(self.keys.down.key))then
-		self.posY = self.posY+dt*self.speed
-		if(self.posY > self.adjPosY+self.interval)then
+		self.posY = self.posY+dt*self.speed * dt
+		if(self.posY > self.adjPosY+self.interval/2)then
 			self.adjPosY = self.adjPosY+self.interval
 		end
 	end
@@ -242,6 +250,7 @@ function PlaceTool:drawTool()
 		love.graphics.setColor(255, 255, 255, 150)
 		love.graphics.draw(self.sprites[self.currentImage], self.adjPosX, self.adjPosY, 0, 5, 5)
 	end
+	love.graphics.rectangle('fill', self.posX+self.gridSize*self.scale/2-(self.scale/2), self.posY+self.gridSize*self.scale/2-(self.scale/2), self.scale, self.scale)
 end--PlaceTool:drawTool
 
 --Desenha a barra de tiles e a barra de favoritos
@@ -341,6 +350,9 @@ function PlaceTool:drawUI()
 	end
 
 	love.graphics.print(text, (self.adjPosX-(love.graphics.getWidth()/2/self.zoom))+toolbarWidth*3.1/self.zoom, self.adjPosY-(love.graphics.getHeight()/2/self.zoom),0,1/self.zoom)
+
+	text = "Velocidade: "..self.speed/1000
+	love.graphics.print(text, (self.adjPosX-(love.graphics.getWidth()/2/self.zoom)), self.adjPosY-(love.graphics.getHeight()/2/self.zoom)+toolbarHeight*3.1/self.zoom,0,1/self.zoom)
 end--PlaceTool:drawUI
 
 --Deleta as cordenadas do arquivo tiles.txt de acordo com a posicao da ferramenta
@@ -593,6 +605,8 @@ function PlaceTool:loadInfo()
 	text = text:gsub("info", "\""..self.keys.info.desc.."\"")
 	text = text:gsub("grid", "\""..self.keys.grid.desc.."\"")
 	text = text:gsub("favorite", "\""..self.keys.favorite.desc.."\"")
+	text = text:gsub("highSpeed", "\""..self.keys.highSpeed.desc.."\"")
+	text = text:gsub("lowSpeed", "\""..self.keys.lowSpeed.desc.."\"")
 
 	return text
 end--PlaceTool:loadInfo
@@ -662,3 +676,15 @@ function PlaceTool:showColliders()
 		self.colliderMode = true
 	end
 end--PlaceTool:showColliders
+
+function PlaceTool:changeSpeed(asc)
+	if(asc)then
+		self.speed = self.speed+10000
+	else
+		self.speed = self.speed-10000
+	end
+
+	if(self.speed <= 0)then
+		self.speed = 10000
+	end
+end--PlaceTool:changeSpeed

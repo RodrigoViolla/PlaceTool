@@ -13,3 +13,5 @@ previousToolbar - Barra de tiles anterior
 info - Mostra/Esconde controles do teclado
 grid - Mostra/Esconde a grade
 favorite - Adiciona o sprite atual como favorito
+highSpeed - Aumenta a velocidade da ferramenta
+lowSpeed - Diminui a velocidade da ferramenta
