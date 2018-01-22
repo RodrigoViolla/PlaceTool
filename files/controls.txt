@@ -1,15 +1,15 @@
 Use as setas do teclado para mover o marcador
 1 a 9 - Muda o sprite para o sprite de numero correspondente a barra superior
-Barra de espaco - Grava as cordenadas no arquivo tiles.txt na pasta location
-ESC - Sair do editor
-A - Ativa/Desativa o modo de colliders
-: - Muda para o proximo sprite
-/ - Muda para o sprite anterior
-D - Deleta o tile atual
-+ - Aumenta o zoom
-- - Diminui o zoom
-> - Proxima barra de tiles
-< - Barra de tiles anterior
-I - Mostra/Esconde controles do teclado
-G - Mostra/Esconde a grade
-F - Adiciona o sprite atual como favorito
+draw - Grava as cordenadas no arquivo tiles.txt na pasta location
+exit - Sair do editor
+colliderMode - Ativa/Desativa o modo de colliders
+nextTile - Muda para o proximo sprite
+previousTile - Muda para o sprite anterior
+delete - Deleta o tile atual
+zoomIn - Aumenta o zoom
+zoomOut - Diminui o zoom
+nextToolbar - Proxima barra de tiles
+previousToolbar - Barra de tiles anterior
+info - Mostra/Esconde controles do teclado
+grid - Mostra/Esconde a grade
+favorite - Adiciona o sprite atual como favorito

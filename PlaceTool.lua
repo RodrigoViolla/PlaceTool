@@ -15,6 +15,26 @@ function PlaceTool:new(world)
 		[6] = {num = 0, key = "n"},
 		[7] = {num = 0, key = "m"}
 	}	
+	placeTool.keys = 
+	{
+		left = {key = "left", desc = "SETA PARA A ESQUERDA"},
+		right = {key = "right", desc = "SETA PARA A DIREITA"},
+		up = {key = "up", desc = "SETA PARA CIMA"},
+		down = {key = "down", desc = "SETA PARA BAIXO"},
+		delete = {key = "d", desc = "D"},
+		colliderMode = {key = "a", desc = "A"},
+		nextTile = {key = "/", desc = "/"},
+		previousTile = {key = ";", desc = ";"},
+		nextToolbar = {key = ".", desc = "."},
+		previousToolbar = {key = ",", desc = ","},
+		favorite = {key = "f", desc = "F"},
+		grid = {key = "g", desc = "G"},
+		info = {key = "i", desc = "I"},
+		zoomIn = {key = "=", desc = "="},
+		zoomOut = {key = "-", desc = "-"},
+		exit = {key = "escape", desc = "ESC"},
+		draw = {key = " ", desc = "BARRA DE ESPAÇO"}
+	}
 	placeTool.world = world
 	placeTool.colliders = {}
 	placeTool.colliderMode = false
@@ -61,40 +81,40 @@ end --PlaceTool:draw
 
 function PlaceTool:keypressed(key)
 	self:manageFavotites(key)
-	if(key == "a")then
+	if(key == self.keys.colliderMode.key)then
 		self:showColliders()
 	end
-	if(key == "i")then
+	if(key == self.keys.info.key)then
 		self:showInfo()
 	end
-	if(key == ".")then
+	if(key == self.keys.nextToolbar.key)then
 		self:changeToolbar(true)
 	end
-	if(key == ",")then
+	if(key == self.keys.previousToolbar.key)then
 		self:changeToolbar(false)
 	end
-	if(key == "/" or string.find(key, "%d") ~= nil)then
+	if(key == self.keys.nextTile.key or string.find(key, "%d") ~= nil)then
 		self:changeTile(true, key)
 	end
-	if(key == ";" or string.find(key, "%d") ~= nil)then
+	if(key == self.keys.previousTile.key or string.find(key, "%d") ~= nil)then
 		self:changeTile(false, key)
 	end
-	if(key == "=")then
+	if(key == self.keys.zoomIn.key)then
 		self:changeZoom(true)
 	end
-	if(key == "-")then
+	if(key == self.keys.zoomOut.key)then
 		self:changeZoom(false)
 	end
-	if(key == " ")then
+	if(key == self.keys.draw.key)then
 		self:writeTile()
 	end
-	if(key == "d")then
+	if(key == self.keys.delete.key)then
 		self:deleteTile()
 	end
-	if(key == "escape")then
+	if(key == self.keys.exit.key)then
 		love.event.quit()
 	end
-	if(key == "g")then
+	if(key == self.keys.grid.key)then
 		self:showGrid()
 	end
 end --PlaceTool:keypressed
@@ -162,14 +182,14 @@ end --PlaceTool:changeImg
 
 --Move a ferramenta de desenho
 function PlaceTool:moveTool(dt)
-	if(love.keyboard.isDown("right"))then
+	if(love.keyboard.isDown(self.keys.right.key))then
 		self.posX = self.posX+dt*self.speed		
 		if(self.posX > self.adjPosX+self.interval)then
 			self.adjPosX = self.adjPosX+self.interval
 		end
 	end
 
-	if(love.keyboard.isDown("left"))then
+	if(love.keyboard.isDown(self.keys.left.key))then
 		if(self.adjPosX > 0)then
 			self.posX = self.posX-dt*self.speed
 		end
@@ -178,7 +198,7 @@ function PlaceTool:moveTool(dt)
 		end
 	end
 
-	if(love.keyboard.isDown("up"))then
+	if(love.keyboard.isDown(self.keys.up.key))then
 		if(self.adjPosY > 0)then
 			self.posY = self.posY-dt*self.speed
 		end
@@ -187,7 +207,7 @@ function PlaceTool:moveTool(dt)
 		end
 	end
 
-	if(love.keyboard.isDown("down"))then
+	if(love.keyboard.isDown(self.keys.down.key))then
 		self.posY = self.posY+dt*self.speed
 		if(self.posY > self.adjPosY+self.interval)then
 			self.adjPosY = self.adjPosY+self.interval
@@ -280,7 +300,16 @@ function PlaceTool:drawUI()
 
 	love.graphics.setColor(255, 255, 255)
 	if(self.favoritesSelect)then
-		text = "Pressione \"Z\", \"X\", \"C\", \"V\", \"B\", \"N\" ou \"M\" para marcar o sprite atual como favorito.\nPressione \"F\" para cancelar."
+		text = "Pressione \""..
+			self.favorites[1].key:upper().."\", \""..
+			self.favorites[2].key:upper().."\", \""..
+			self.favorites[3].key:upper().."\", \""..
+			self.favorites[4].key:upper().."\", \""..
+			self.favorites[5].key:upper().."\", \""..
+			self.favorites[6].key:upper().."\" ou \""..
+			self.favorites[7].key:upper()..
+			"\" para marcar o sprite atual como favorito.\nPressione \""..
+			self.keys.favorite.desc:upper().."\" para cancelar."
 		love.graphics.printf(text, self.adjPosX-limit/2/self.zoom, self.adjPosY, limit, "center", 0,1/self.zoom,1/self.zoom, 0, 0, 0, 0)
 	end
 
@@ -299,16 +328,16 @@ function PlaceTool:drawUI()
 	local colliderText = ""
 	if(self.colliderMode)then
 		love.graphics.setColor(0, 255, 0)
-		colliderText = "Pressione \"A\" para desativar o modo de colisores"
+		colliderText = "Pressione \""..self.keys.colliderMode.key:upper().."\" para desativar o modo de colisores"
 	else
 		love.graphics.setColor(255, 255, 255)
-		colliderText = "Pressione \"A\" para ativar o modo de colisores"
+		colliderText = "Pressione \""..self.keys.colliderMode.key:upper().."\" para ativar o modo de colisores"
 	end
 
 	if(self.info)then
 		text = self.infoText
 	else
-		text = colliderText.."\nPressione \"I\" para mostrar comandos do teclado."
+		text = colliderText.."\nPressione \""..self.keys.info.key:upper().."\" para mostrar comandos do teclado."
 	end
 
 	love.graphics.print(text, (self.adjPosX-(love.graphics.getWidth()/2/self.zoom))+toolbarWidth*3.1/self.zoom, self.adjPosY-(love.graphics.getHeight()/2/self.zoom),0,1/self.zoom)
@@ -320,7 +349,6 @@ function PlaceTool:deleteTile()
 		self:deleteCollider()
 	else
 		for i, position in ipairs(self.mapPositions)do
-			print("X Array: "..position.x.." Cursor:"..self.adjPosX.." | Y Array:"..position.y.." Cursor:"..self.adjPosY)			
 			if(position.x*1 == self.adjPosX and position.y*1 == self.adjPosY)then
 				table.remove(self.mapPositions, i)
 			end
@@ -330,7 +358,7 @@ end --PlaceTool:deleteTile
 
 --Define a barra de favoritos
 function PlaceTool:manageFavotites(key)
-	if(key == "f")then
+	if(key == self.keys.favorite.key)then
 		if(self.favoritesSelect)then
 			self.favoritesSelect = false
 		else
@@ -550,8 +578,23 @@ end --PlaceTool:saveFavorites
 --Carrega as informacoes de comandos do teclado do arquivo controls.txt
 function PlaceTool:loadInfo()
 	local info = io.open(self.path.."/files/controls.txt", "r")
-	
-	return info:read('*a')		
+	local text = info:read('*a')
+
+	text = text:gsub("draw", "\""..self.keys.draw.desc.."\"")
+	text = text:gsub("exit", "\""..self.keys.exit.desc.."\"")
+	text = text:gsub("colliderMode", "\""..self.keys.colliderMode.desc.."\"")
+	text = text:gsub("nextTile", "\""..self.keys.nextTile.desc.."\"")
+	text = text:gsub("previousTile", "\""..self.keys.previousTile.desc.."\"")
+	text = text:gsub("delete", "\""..self.keys.delete.desc.."\"")
+	text = text:gsub("zoomIn", "\""..self.keys.zoomIn.desc.."\"")
+	text = text:gsub("zoomOut", "\""..self.keys.zoomOut.desc.."\"")
+	text = text:gsub("nextToolbar", "\""..self.keys.nextToolbar.desc.."\"")
+	text = text:gsub("previousToolbar", "\""..self.keys.previousToolbar.desc.."\"")
+	text = text:gsub("info", "\""..self.keys.info.desc.."\"")
+	text = text:gsub("grid", "\""..self.keys.grid.desc.."\"")
+	text = text:gsub("favorite", "\""..self.keys.favorite.desc.."\"")
+
+	return text
 end--PlaceTool:loadInfo
 
 function PlaceTool:createCollider(x, y)
