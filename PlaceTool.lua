@@ -71,7 +71,7 @@ function PlaceTool:new(world)
 end --PlaceTool:new
 
 function PlaceTool:update(dt)
-	self:moveTool(dt)	
+	self:moveTool(dt)
 	if love.mouse.isDown(self.keys.draw.key) then
 		self:writeTile()
 	end
@@ -164,10 +164,10 @@ function PlaceTool:loadMapPositions()
 					table.insert(linePositions, num) 
 			end
 			position = {x = linePositions[1], y = linePositions[2], sprite = linePositions[3]} 
-			table.insert(positions, position)
+			file:insert(positions, position)
 		end
 	end
-	io.close()
+	file:close()
 
 	return positions
 end --PlaceTool:loadMapPositions
@@ -180,10 +180,9 @@ function PlaceTool:saveMapPositions()
 		textFile = textFile.."\n"..position.x..","..position.y..","..position.sprite
 	end
 
-	print(io.output(file))
-	io.flush()
-	io.write(textFile)
-	io.close()
+	file:flush()
+	file:write(textFile)
+	file:close()
 end--PlaceTool:saveMapPositions
 
 --Muda o contador da imagem do tile atual
@@ -557,7 +556,7 @@ function PlaceTool:checkTilesOrder()
 	end
 	
 	local tilesOrderWrite = io.open(self.path.."/files/tilesOrder.txt", "w+")
-	io.flush()
+	tilesOrderWrite:flush()
 	tilesOrderWrite:write(fileText)  
 	tilesOrderWrite:close()
 end--PlaceTool:checkTilesOrder
@@ -567,7 +566,7 @@ function PlaceTool:loadSprites()
 	local tilesOrder = io.open(self.path.."/files/tilesOrder.txt", "r")
 	local cnt = 1
 	for line in tilesOrder:lines()do
-		if line ~= "" then	
+		if line ~= "" then
 			if love.filesystem.exists("tiles/"..line) then
 				self.sprites[cnt] = love.graphics.newImage("tiles/"..line)
 				cnt = cnt+1
@@ -594,14 +593,13 @@ end
 function PlaceTool:deleteImage(tileName)
 		local readFile = io.open(self.path.."/files/tilesOrder.txt", "r")
 		fileText = readFile:read('*a')
-		io.close()
+		readFile:close()
 		fileText = fileText:gsub(tileName, '\n')
 		fileText = fileText:gsub("\n+", '\n')
 		local file = io.open(self.path.."/files/tilesOrder.txt", "w+")
-		print(io.output(file))
-		io.flush()
-		io.write(fileText)
-		io.close()
+		file:flush()
+		file:write(fileText)
+		file:close()
 end --PlaceTool:deleteImage
 
 --Carrega a barra de favoritos
@@ -614,20 +612,19 @@ function PlaceTool:loadFavorites()
 			cnt = cnt+1
 		end
 	end
-	io.close()
+	favorites:close()
 end--PlaceTool:loadFavorites
 
 --Salva a barra de favoritos no arquivo favorites.txt
 function PlaceTool:saveFavorites()
 	local file = io.open(self.path.."/files/favorites.txt", "w+")
-	print(io.output(file))
-	io.flush()
+	file:flush()
 	local textFile = ""
 	for i = 1,7 do
 		textFile = textFile..self.favorites[i].num.."\n"
 	end
-	io.write(textFile)
-	io.close()
+	file:write(textFile)
+	file:close()
 end --PlaceTool:saveFavorites
 
 --Carrega as informacoes de comandos do teclado do arquivo controls.txt
@@ -651,7 +648,7 @@ function PlaceTool:loadInfo()
 	text = text:gsub("highSpeed", "\""..self.keys.highSpeed.desc.."\"")
 	text = text:gsub("lowSpeed", "\""..self.keys.lowSpeed.desc.."\"")
 
-	io.close()
+	info:close()
 
 	return text
 end--PlaceTool:loadInfo
@@ -709,7 +706,7 @@ function PlaceTool:loadColliders()
 			self:createCollider(linePositions[1], linePositions[2])
 		end
 	end
-	io.close()
+	file:close()
 end--PlaceTool:loadColliders
 
 function PlaceTool:saveColliders()
@@ -719,10 +716,9 @@ function PlaceTool:saveColliders()
 	end
 
 	local file = io.open(self.path.."/files/colliders.txt", "w+")
-	print(io.output(file))
-	io.flush()
-	io.write(collidersText)
-	io.close()
+	file:flush()
+	file:write(collidersText)
+	file:close()
 end --PlaceTool:saveColliders
 
 function PlaceTool:showColliders()
@@ -755,11 +751,11 @@ function PlaceTool:loadLastPosition()
 					table.insert(linePositions, num) 
 			end
 			position = {x = linePositions[1], y = linePositions[2]}
-			io.close()
+			file:close()
 			return position 
 		end
 	end
-	io.close()
+	file:close()
 	return nil
 end--PlaceTool:loadLastPosition
 
@@ -767,8 +763,7 @@ function PlaceTool:saveLastPosition()
 	local file = io.open(self.path.."/files/lastPosition.txt", "w+")
 	local textFile = self.adjPosX..","..self.adjPosY
 	
-	print(io.output(file))
-	io.flush()
-	io.write(textFile)
-	io.close()	
+	file:flush()
+	file:write(textFile)
+	file:close()
 end--PlaceTool:saveLastPosition
