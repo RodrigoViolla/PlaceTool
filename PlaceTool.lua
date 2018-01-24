@@ -164,7 +164,7 @@ function PlaceTool:loadMapPositions()
 					table.insert(linePositions, num) 
 			end
 			position = {x = linePositions[1], y = linePositions[2], sprite = linePositions[3]} 
-			file:insert(positions, position)
+			table.insert(positions, position)
 		end
 	end
 	file:close()
