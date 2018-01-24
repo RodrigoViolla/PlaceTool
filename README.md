@@ -7,14 +7,14 @@ Todos os arquivos presentes no diretorio PlaceTool/tiles serão adicionados ao e
 IMPORTANTE: Os arquivos não podem conter espaços no nome.<br><br>
 
 TECLAS<br><br>
-  Use as setas do teclado para mover o marcador<br>
+  Use as setas do teclado para mover a tela<br>
   1 a 9 - Muda o sprite para o sprite de numero correspondente a barra superior<br>
   "A" - Ativa/Desativa o modo de colliders<br>
-  "BARRA DE ESPAÇO" - Grava as cordenadas no arquivo tiles.txt na pasta location<br>
+  "BOTÃO ESQUERDO DO MOUSE" - Desenha o tile atual<br>
+  "BOTÃO DIREITO DO MOUSE" - Deleta o tile atual<br>
   "ESC" - Sair do editor<br>
   "/" - Muda para o proximo sprite<br>
   ";" - Muda para o sprite anterior<br>
-  "D" - Deleta o tile atual<br>
   "=" - Aumenta o zoom<br>
   "-" - Diminui o zoom<br>
   "." - Proxima barra de tiles<br>

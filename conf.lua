@@ -1,6 +1,6 @@
 function love.conf(t)
     t.identity = nil
-    t.version = "0.9.1"
+    t.version = "0.10.2"
     t.console = false
     t.accelerometerjoystick = false
     t.externalstorage = false
@@ -30,7 +30,7 @@ function love.conf(t)
     t.modules.joystick = true
     t.modules.keyboard = true
     t.modules.math = true
-    t.modules.mouse = false
+    t.modules.mouse = true
     t.modules.physics = true
     t.modules.sound = false
     t.modules.system = true

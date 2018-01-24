@@ -1,11 +1,11 @@
-Use as setas do teclado para mover o marcador
+Use as setas do teclado para mover a tela
 1 a 9 - Muda o sprite para o sprite de numero correspondente a barra superior
-draw - Grava as cordenadas no arquivo tiles.txt na pasta location
+draw - Desenha o tile atual
+delete - Deleta o tile atual
 exit - Sair do editor
 colliderMode - Ativa/Desativa o modo de colliders
 nextTile - Muda para o proximo sprite
 previousTile - Muda para o sprite anterior
-delete - Deleta o tile atual
 zoomIn - Aumenta o zoom
 zoomOut - Diminui o zoom
 nextToolbar - Proxima barra de tiles

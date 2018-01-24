@@ -21,7 +21,7 @@ function PlaceTool:new(world)
 		right = {key = "right", desc = "SETA PARA A DIREITA"},
 		up = {key = "up", desc = "SETA PARA CIMA"},
 		down = {key = "down", desc = "SETA PARA BAIXO"},
-		delete = {key = "d", desc = "D"},
+		delete = {key = "2", desc = "BOTÃO DIREITO DO MOUSE"},
 		colliderMode = {key = "a", desc = "A"},
 		nextTile = {key = "/", desc = "/"},
 		previousTile = {key = ";", desc = ";"},
@@ -33,7 +33,7 @@ function PlaceTool:new(world)
 		zoomIn = {key = "=", desc = "="},
 		zoomOut = {key = "-", desc = "-"},
 		exit = {key = "escape", desc = "ESC"},
-		draw = {key = " ", desc = "BARRA DE ESPAÇO"},
+		draw = {key = "1", desc = "BOTÃO ESQUERDO DO MOUSE"},
 		highSpeed = {key = "lshift", desc = "SHIFT ESQUERDO"},
 		lowSpeed = {key = "lctrl", desc = "CONTROL ESQUERDO"}
 	}
@@ -55,6 +55,8 @@ function PlaceTool:new(world)
 	local lastPosition = placeTool:loadLastPosition()
 	placeTool.adjPosX = lastPosition.x*1
 	placeTool.adjPosY = lastPosition.y*1
+	self.adjMouseX = 0
+	self.adjMouseY = 0
 	placeTool.posX = lastPosition.x*1
 	placeTool.posY = lastPosition.y*1
 	placeTool.currentImage = 1
@@ -69,7 +71,13 @@ function PlaceTool:new(world)
 end --PlaceTool:new
 
 function PlaceTool:update(dt)
-	self:moveTool(dt)
+	self:moveTool(dt)	
+	if love.mouse.isDown(self.keys.draw.key) then
+		self:writeTile()
+	end
+	if love.mouse.isDown(self.keys.delete.key) then
+		self:deleteTile()
+	end
 end --PlaceTool:update
 
 function PlaceTool:draw()
@@ -107,13 +115,7 @@ function PlaceTool:keypressed(key)
 	end
 	if key == self.keys.zoomOut.key then
 		self:changeZoom(false)
-	end
-	if key == self.keys.draw.key then
-		self:writeTile()
-	end
-	if key == self.keys.delete.key then
-		self:deleteTile()
-	end
+	end	
 	if key == self.keys.exit.key then
 		love.event.quit()
 	end
@@ -138,7 +140,7 @@ end--PlaceTool:quit
 --Grava as cordenadas do tile no arquivo tiles.txt
 function PlaceTool:writeLocation()
 	local exists = false
-	local writePosition = {x = self.adjPosX, y = self.adjPosY, sprite = self.currentImage} 
+	local writePosition = {x = self.adjMouseX, y = self.adjMouseY, sprite = self.currentImage} 
 	 
 	for i, position in ipairs(self.mapPositions)do
 		if writePosition.x == position.x and writePosition.y == position.y and writePosition.tile == position.tile then
@@ -202,6 +204,7 @@ end --PlaceTool:changeImg
 
 --Move a ferramenta de desenho
 function PlaceTool:moveTool(dt)
+	--Movendo a camera
 	if love.keyboard.isDown(self.keys.right.key) then
 		self.posX = self.posX+dt*self.speed * dt
 		if self.posX > self.adjPosX+self.interval/2 then
@@ -233,6 +236,33 @@ function PlaceTool:moveTool(dt)
 			self.adjPosY = self.adjPosY+self.interval
 		end
 	end
+	--Movendo a ferramenta
+	local x, y = love.mouse.getPosition()
+	
+	x = (x/self.zoom)-love.graphics.getWidth()/2/self.zoom+self.adjPosX
+	y = (y/self.zoom)-love.graphics.getHeight()/2/self.zoom+self.adjPosY
+
+	if x > self.adjMouseX+self.interval then
+			self.adjMouseX = self.adjMouseX+self.interval
+	end
+
+	if x < self.adjMouseX then
+		self.adjMouseX = self.adjMouseX-self.interval
+	end
+
+	if y < self.adjMouseY then
+		self.adjMouseY = self.adjMouseY-self.interval
+	end
+
+	if y > self.adjMouseY+self.interval then
+		self.adjMouseY = self.adjMouseY+self.interval
+	end
+	if self.adjMouseX < 0 then
+		self.adjMouseX = 0
+	end
+	if self.adjMouseY < 0 then
+		self.adjMouseY = 0
+	end
 end--PlaceTool:moveTool
 
 --Gerencia a posicao e o zoom da camera
@@ -256,12 +286,10 @@ function PlaceTool:drawTool()
 		love.graphics.setColor(0, 255, 0)
 	else
 		love.graphics.setColor(255, 255, 255, 150)
-		love.graphics.draw(self.sprites[self.currentImage], self.adjPosX, self.adjPosY, 0, 5, 5)
+		love.graphics.draw(self.sprites[self.currentImage], self.adjMouseX, self.adjMouseY, 0, 5, 5)
 		love.graphics.setColor(0, 0, 255)
 	end
-
-	love.graphics.rectangle('fill', self.posX+self.gridSize*self.scale/2-(self.scale/2), self.posY+self.gridSize*self.scale/2-(self.scale/2), self.scale, self.scale)
-	love.graphics.rectangle('line', self.adjPosX, self.adjPosY, self.sprites[self.currentImage]:getWidth()*self.scale, self.sprites[self.currentImage]:getHeight()*self.scale)
+	love.graphics.rectangle('line', self.adjMouseX, self.adjMouseY, self.sprites[self.currentImage]:getWidth()*self.scale, self.sprites[self.currentImage]:getHeight()*self.scale)
 end--PlaceTool:drawTool
 
 --Desenha a barra de tiles e a barra de favoritos
@@ -371,7 +399,7 @@ function PlaceTool:deleteTile()
 		self:deleteCollider()
 	else
 		for i, position in ipairs(self.mapPositions)do
-			if position.x*1 == self.adjPosX and position.y*1 == self.adjPosY then
+			if position.x*1 == self.adjMouseX and position.y*1 == self.adjMouseY then
 				table.remove(self.mapPositions, i)
 			end
 		end
@@ -435,7 +463,7 @@ end--PlaceTool:changeZoom
 --Insere um tile no arquivo tiles.txt
 function PlaceTool:writeTile()
 	if self.colliderMode then
-		self:createCollider(self.adjPosX, self.adjPosY)
+		self:createCollider(self.adjMouseX, self.adjMouseY)
 	else
 		self:writeLocation()
 	end
@@ -516,20 +544,22 @@ end--PlaceTool:drawGrid
 function PlaceTool:checkTilesOrder()
 	local images = love.filesystem.getDirectoryItems("tiles")
 	local tilesOrderRead = io.open(self.path.."/files/tilesOrder.txt", "r")
-	local tilesOrderWrite = io.open(self.path.."/files/tilesOrder.txt", "a")
 	local fileText = tilesOrderRead:read('*a')
+	tilesOrderRead:close()
 	local isInList = nil
 
 	for cnt, tile in ipairs(images)do
 		isInList = fileText:find(tile.."+")
 
 		if isInList == nil then
-			print(io.output(tilesOrderWrite))
-			io.flush()
-			io.write(tile.."\n")  
+			fileText = fileText.."\n"..tile
 		end
 	end
-	io.close()
+	
+	local tilesOrderWrite = io.open(self.path.."/files/tilesOrder.txt", "w+")
+	io.flush()
+	tilesOrderWrite:write(fileText)  
+	tilesOrderWrite:close()
 end--PlaceTool:checkTilesOrder
 
 --Carrega as imagens de acordo com a ordem em tilesOrder
@@ -537,13 +567,16 @@ function PlaceTool:loadSprites()
 	local tilesOrder = io.open(self.path.."/files/tilesOrder.txt", "r")
 	local cnt = 1
 	for line in tilesOrder:lines()do
-		if love.filesystem.exists("tiles/"..line) then
-			self.sprites[cnt] = love.graphics.newImage("tiles/"..line)
-			cnt = cnt+1
-		else
-			self:deleteImage(line)
+		if line ~= "" then	
+			if love.filesystem.exists("tiles/"..line) then
+				self.sprites[cnt] = love.graphics.newImage("tiles/"..line)
+				cnt = cnt+1
+			else
+				self:deleteImage(line)
+			end
 		end
 	end
+	tilesOrder:close()
 end--PlaceTool:loadSprites
 
 function PlaceTool:makeFavorite(favorite)
@@ -560,9 +593,8 @@ end
 --Deleta o nome do arquivo do documento tilesOrder.txt
 function PlaceTool:deleteImage(tileName)
 		local readFile = io.open(self.path.."/files/tilesOrder.txt", "r")
-
 		fileText = readFile:read('*a')
-		readFile:close()
+		io.close()
 		fileText = fileText:gsub(tileName, '\n')
 		fileText = fileText:gsub("\n+", '\n')
 		local file = io.open(self.path.."/files/tilesOrder.txt", "w+")
@@ -582,6 +614,7 @@ function PlaceTool:loadFavorites()
 			cnt = cnt+1
 		end
 	end
+	io.close()
 end--PlaceTool:loadFavorites
 
 --Salva a barra de favoritos no arquivo favorites.txt
@@ -618,6 +651,8 @@ function PlaceTool:loadInfo()
 	text = text:gsub("highSpeed", "\""..self.keys.highSpeed.desc.."\"")
 	text = text:gsub("lowSpeed", "\""..self.keys.lowSpeed.desc.."\"")
 
+	io.close()
+
 	return text
 end--PlaceTool:loadInfo
 
@@ -653,8 +688,8 @@ function PlaceTool:drawColliders()
 end--PlaceTool:drawColliders
 
 function PlaceTool:deleteCollider()
-	local deletePosX = self.adjPosX+self.sprites[self.currentImage]:getWidth()*self.scale/2
-	local deletePosY = self.adjPosY+self.sprites[self.currentImage]:getHeight()*self.scale/2
+	local deletePosX = self.adjMouseX+self.sprites[self.currentImage]:getWidth()*self.scale/2
+	local deletePosY = self.adjMouseY+self.sprites[self.currentImage]:getHeight()*self.scale/2
 
 	for i, collider in ipairs(self.colliders)do
 		if collider.x == deletePosX and collider.y == deletePosY then
@@ -674,6 +709,7 @@ function PlaceTool:loadColliders()
 			self:createCollider(linePositions[1], linePositions[2])
 		end
 	end
+	io.close()
 end--PlaceTool:loadColliders
 
 function PlaceTool:saveColliders()
