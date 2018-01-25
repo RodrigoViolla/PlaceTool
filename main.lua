@@ -21,3 +21,7 @@ end
 function love.quit()
 	tool:quit()
 end
+
+function love.wheelmoved(x, y)
+    tool:wheelmoved(x, y)
+end

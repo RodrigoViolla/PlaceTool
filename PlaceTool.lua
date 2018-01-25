@@ -5,7 +5,7 @@ function PlaceTool:new(world)
 	local placeTool = placeTool or {}
 	setmetatable(placeTool, PlaceTool)
 
-	placeTool.favorites = 
+	placeTool.favorites =
 	{
 		[1] = {num = 0, key = "z"},
 		[2] = {num = 0, key = "x"},
@@ -15,7 +15,7 @@ function PlaceTool:new(world)
 		[6] = {num = 0, key = "n"},
 		[7] = {num = 0, key = "m"}
 	}
-	placeTool.keys = 
+	placeTool.keys =
 	{
 		left = {key = "left", desc = "SETA PARA A ESQUERDA"},
 		right = {key = "right", desc = "SETA PARA A DIREITA"},
@@ -130,6 +130,14 @@ function PlaceTool:keypressed(key)
 	end
 end --PlaceTool:keypressed
 
+function PlaceTool:wheelmoved(x, y)
+	if y > 0 then
+		self:changeZoom(true)
+	else
+		self:changeZoom(false)
+	end
+end--PlaceTool:wheelmoved
+
 function PlaceTool:quit()
 	self:saveFavorites()
 	self:saveColliders()
@@ -140,10 +148,10 @@ end--PlaceTool:quit
 --Grava as cordenadas do tile no arquivo tiles.txt
 function PlaceTool:writeLocation()
 	local exists = false
-	local writePosition = {x = self.adjMouseX, y = self.adjMouseY, sprite = self.currentImage} 
-	 
+	local writePosition = {x = self.adjMouseX, y = self.adjMouseY, sprite = self.currentImage}
+	
 	for i, position in ipairs(self.mapPositions)do
-		if writePosition.x == position.x and writePosition.y == position.y and writePosition.tile == position.tile then
+		if writePosition.x == position.x and writePosition.y == position.y and writePosition.sprite == position.sprite then
 		exists = true
 		end
 	end
@@ -161,9 +169,9 @@ function PlaceTool:loadMapPositions()
 		if line ~= "" then
 			local linePositions = {}
 			for num in line:gmatch"%d+" do
-					table.insert(linePositions, num) 
+					table.insert(linePositions, num)
 			end
-			position = {x = linePositions[1], y = linePositions[2], sprite = linePositions[3]} 
+			position = {x = linePositions[1], y = linePositions[2], sprite = linePositions[3]}
 			table.insert(positions, position)
 		end
 	end
@@ -204,14 +212,17 @@ end --PlaceTool:changeImg
 --Move a ferramenta de desenho
 function PlaceTool:moveTool(dt)
 	--Movendo a camera
-	if love.keyboard.isDown(self.keys.right.key) then
+	local x, y = love.mouse.getPosition()
+	local margin = 10
+
+	if love.keyboard.isDown(self.keys.right.key) or x >= love.graphics.getWidth()-margin then
 		self.posX = self.posX+dt*self.speed * dt
 		if self.posX > self.adjPosX+self.interval/2 then
 			self.adjPosX = self.adjPosX+self.interval
 		end
 	end
 
-	if love.keyboard.isDown(self.keys.left.key) then
+	if love.keyboard.isDown(self.keys.left.key) or x <= margin then
 		if self.adjPosX > 0 then
 			self.posX = self.posX-dt*self.speed * dt
 		end
@@ -219,8 +230,8 @@ function PlaceTool:moveTool(dt)
 			self.adjPosX = self.adjPosX-self.interval
 		end
 	end
-
-	if love.keyboard.isDown(self.keys.up.key) then
+	
+	if love.keyboard.isDown(self.keys.up.key) or y <= margin then
 		if self.adjPosY > 0 then
 			self.posY = self.posY-dt*self.speed * dt
 		end
@@ -229,7 +240,7 @@ function PlaceTool:moveTool(dt)
 		end
 	end
 
-	if love.keyboard.isDown(self.keys.down.key) then
+	if love.keyboard.isDown(self.keys.down.key) or y >= love.graphics.getHeight()-margin then
 		self.posY = self.posY+dt*self.speed * dt
 		if self.posY > self.adjPosY+self.interval/2 then
 			self.adjPosY = self.adjPosY+self.interval
@@ -388,8 +399,8 @@ function PlaceTool:drawUI()
 
 	love.graphics.print(text, (self.adjPosX-(love.graphics.getWidth()/2/self.zoom))+toolbarWidth*3.1/self.zoom, self.adjPosY-(love.graphics.getHeight()/2/self.zoom),0,1/self.zoom)
 
-	text = "\nVelocidade: "..self.speed/1000
-	love.graphics.print(text, (self.adjPosX-(love.graphics.getWidth()/2/self.zoom)), self.adjPosY-(love.graphics.getHeight()/2/self.zoom)+toolbarHeight*3.1/self.zoom,0,1/self.zoom)
+	text = "Velocidade: "..self.speed/1000
+	love.graphics.print(text, (self.adjPosX-(love.graphics.getWidth()/2/self.zoom)), self.adjPosY+love.graphics.getHeight()/2/self.zoom-15/self.zoom,0,1/self.zoom)
 end--PlaceTool:drawUI
 
 --Deleta as cordenadas do arquivo tiles.txt de acordo com a posicao da ferramenta
@@ -476,14 +487,14 @@ function PlaceTool:changeTile(next, key)
 		end
 	else
 		if next then
-			if (self.currentImage%9) == 0 then
+			if self.currentImage%9 == 0 then
 				if self.spritesTableSize >= self.toolbar+9 then
 					self.toolbar = self.toolbar+9
 				end
 			end
 			self:changeImg(true)
 		else
-			if (self.currentImage%9) == 1 then
+			if self.currentImage%9 == 1 then
 				self.toolbar = self.toolbar-9
 				if self.toolbar < 0 then
 					self.toolbar = 0
@@ -513,51 +524,52 @@ function PlaceTool:drawGrid()
 
 		--Desenha a grid vertical
 		local prevPos = love.graphics.getWidth()/2
-		while prevPos <  love.graphics.getWidth()/self.zoom do
+		while prevPos < love.graphics.getWidth()/self.zoom do
 			love.graphics.line(self.adjPosX - love.graphics.getWidth()/2+prevPos, self.adjPosY - love.graphics.getHeight()/2/self.zoom, self.adjPosX - love.graphics.getWidth()/2+prevPos, self.adjPosY + love.graphics.getHeight()/2/self.zoom)
 			prevPos = prevPos+self.gridSize*self.scale
 		end
 		local prevPos = love.graphics.getWidth()/2
-		while prevPos >  -love.graphics.getWidth()/self.zoom do
+		while prevPos > -love.graphics.getWidth()/self.zoom do
 			love.graphics.line(self.adjPosX - love.graphics.getWidth()/2+prevPos, self.adjPosY - love.graphics.getHeight()/2/self.zoom, self.adjPosX - love.graphics.getWidth()/2+prevPos, self.adjPosY + love.graphics.getHeight()/2/self.zoom)
 			prevPos = prevPos-self.gridSize*self.scale
 		end
 		--Desenha a grid horizontal
 		local prevPos = love.graphics.getHeight()/2
-		while prevPos <  love.graphics.getHeight()/self.zoom do
+		while prevPos < love.graphics.getHeight()/self.zoom do
 			love.graphics.line(self.adjPosX-love.graphics.getWidth()/2/self.zoom, self.adjPosY-love.graphics.getHeight()/2+prevPos,self.adjPosX+love.graphics.getWidth()/2/self.zoom, self.adjPosY-love.graphics.getHeight()/2+prevPos)
 			prevPos = prevPos+self.gridSize*self.scale
 		end
 		local prevPos = love.graphics.getHeight()/2
-		while prevPos >  -love.graphics.getHeight()/self.zoom do
+		while prevPos > -love.graphics.getHeight()/self.zoom do
 			love.graphics.line(self.adjPosX-love.graphics.getWidth()/2/self.zoom, self.adjPosY-love.graphics.getHeight()/2+prevPos,self.adjPosX+love.graphics.getWidth()/2/self.zoom, self.adjPosY-love.graphics.getHeight()/2+prevPos)
 			prevPos = prevPos-self.gridSize*self.scale
 		end
 	end
 	love.graphics.setColor(255, 0, 0)
 	love.graphics.line(0, 0, self.adjPosX+love.graphics.getWidth()/2/self.zoom, 0)
+	love.graphics.setColor(0, 255, 0)
 	love.graphics.line(0, 0, 0, self.adjPosY+love.graphics.getHeight()/2/self.zoom)
 end--PlaceTool:drawGrid
 
 --Checa a ordem em que os tiles serao desenhados
 function PlaceTool:checkTilesOrder()
+	local isInList = nil
 	local images = love.filesystem.getDirectoryItems("tiles")
 	local tilesOrderRead = io.open(self.path.."/files/tilesOrder.txt", "r")
 	local fileText = tilesOrderRead:read('*a')
 	tilesOrderRead:close()
-	local isInList = nil
 
 	for cnt, tile in ipairs(images)do
-		isInList = fileText:find(tile.."+")
+		isInList = fileText:find("\n"..tile)
 
 		if isInList == nil then
-			fileText = fileText.."\n"..tile
+			fileText = fileText..tile.."\n"
 		end
 	end
 	
 	local tilesOrderWrite = io.open(self.path.."/files/tilesOrder.txt", "w+")
 	tilesOrderWrite:flush()
-	tilesOrderWrite:write(fileText)  
+	tilesOrderWrite:write(fileText)
 	tilesOrderWrite:close()
 end--PlaceTool:checkTilesOrder
 
@@ -658,8 +670,8 @@ function PlaceTool:createCollider(x, y)
 	collider.tileX, collider.tileY = x, y
 	collider.x = x+self.sprites[self.currentImage]:getWidth()*self.scale/2
 	collider.y = y+self.sprites[self.currentImage]:getHeight()*self.scale/2
-	collider.body = love.physics.newBody(self.world, collider.x, collider.y) 
-	collider.shape = love.physics.newRectangleShape(self.sprites[self.currentImage]:getWidth()*self.scale, self.sprites[self.currentImage]:getHeight()*self.scale) 
+	collider.body = love.physics.newBody(self.world, collider.x, collider.y)
+	collider.shape = love.physics.newRectangleShape(self.sprites[self.currentImage]:getWidth()*self.scale, self.sprites[self.currentImage]:getHeight()*self.scale)
 	collider.fixture = love.physics.newFixture(collider.body, collider.shape)
 
 	local exists = false
@@ -701,7 +713,7 @@ function PlaceTool:loadColliders()
 		if line ~= "" then
 			local linePositions = {}
 			for num in line:gmatch"%d+" do
-					table.insert(linePositions, num) 
+					table.insert(linePositions, num)
 			end
 			self:createCollider(linePositions[1], linePositions[2])
 		end
@@ -748,11 +760,11 @@ function PlaceTool:loadLastPosition()
 		if line ~= "" then
 			local linePositions = {}
 			for num in line:gmatch"%d+" do
-					table.insert(linePositions, num) 
+					table.insert(linePositions, num)
 			end
 			position = {x = linePositions[1], y = linePositions[2]}
 			file:close()
-			return position 
+			return position
 		end
 	end
 	file:close()

@@ -8,12 +8,12 @@ function love.conf(t)
  
     t.window.title = "PlaceTool"
     t.window.icon = nil
-    t.window.width = 800
-    t.window.height = 600
+    t.window.width = 0
+    t.window.height = 0
     t.window.borderless = false
     t.window.resizable = true
-    t.window.minwidth = 1
-    t.window.minheight = 1
+    t.window.minwidth = 400
+    t.window.minheight = 300
     t.window.fullscreen = false
     t.window.fullscreentype = "desktop"
     t.window.vsync = false
@@ -23,11 +23,11 @@ function love.conf(t)
     t.window.x = nil
     t.window.y = nil
  
-    t.modules.audio = true
+    t.modules.audio = false
     t.modules.event = true
     t.modules.graphics = true
     t.modules.image = true
-    t.modules.joystick = true
+    t.modules.joystick = false
     t.modules.keyboard = true
     t.modules.math = true
     t.modules.mouse = true
