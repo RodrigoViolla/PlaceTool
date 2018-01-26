@@ -130,6 +130,14 @@ function PlaceTool:keypressed(key)
 	end
 end --PlaceTool:keypressed
 
+function PlaceTool:mousepressed(mx,my,button)
+	if button == 1 then
+		if self:isMouseHoverToolbar() ~= 0 then
+			self.currentImage = self:isMouseHoverToolbar()
+		end
+	end
+end--PlaceTool:mousepressed
+
 function PlaceTool:wheelmoved(x, y)
 	if y > 0 then
 		self:changeZoom(true)
@@ -472,10 +480,12 @@ end--PlaceTool:changeZoom
 
 --Insere um tile no arquivo tiles.txt
 function PlaceTool:writeTile()
-	if self.colliderMode then
-		self:createCollider(self.adjMouseX, self.adjMouseY)
-	else
-		self:writeLocation()
+	if self:isMouseHoverToolbar() == 0 then
+		if self.colliderMode then
+			self:createCollider(self.adjMouseX, self.adjMouseY)
+		else
+			self:writeLocation()
+		end
 	end
 end--PlaceTool:writeTile
 
@@ -774,8 +784,30 @@ end--PlaceTool:loadLastPosition
 function PlaceTool:saveLastPosition()
 	local file = io.open(self.path.."/files/lastPosition.txt", "w+")
 	local textFile = self.adjPosX..","..self.adjPosY
-	
+
 	file:flush()
 	file:write(textFile)
 	file:close()
 end--PlaceTool:saveLastPosition
+
+function PlaceTool:isMouseHoverToolbar()
+	local mx, my = love.mouse.getPosition()
+	local prevPos = 0
+
+	for i = 1,9 do
+		if self.sprites[i+self.toolbar] ~= nil then
+			local x = prevPos
+			local y = 0
+
+			if mx >= x and mx <= x + self.sprites[i]:getWidth()*3 then
+				if my >= y and my < y + self.sprites[i]:getHeight()*3 then
+				return i
+				end
+			end
+
+			prevPos = prevPos+self.sprites[i+self.toolbar]:getWidth()*3
+		end
+	end
+
+	return 0
+end--PlaceTool:isMouseHoverToolbar

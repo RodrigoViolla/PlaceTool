@@ -25,3 +25,7 @@ end
 function love.wheelmoved(x, y)
     tool:wheelmoved(x, y)
 end
+
+function love.mousepressed(x, y, button, istouch)
+   tool:mousepressed(x,y,button)
+end
