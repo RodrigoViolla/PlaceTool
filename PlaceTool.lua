@@ -799,9 +799,9 @@ function PlaceTool:isMouseHoverToolbar()
 			local x = prevPos
 			local y = 0
 
-			if mx >= x and mx <= x + self.sprites[i]:getWidth()*3 then
-				if my >= y and my < y + self.sprites[i]:getHeight()*3 then
-				return i
+			if mx >= x and mx <= x + self.sprites[i+self.toolbar]:getWidth()*3 then
+				if my >= y and my < y + self.sprites[i+self.toolbar]:getHeight()*3 then
+				return i+self.toolbar
 				end
 			end
 
