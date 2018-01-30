@@ -34,12 +34,14 @@ function PlaceTool:new(world)
 		zoomOut = {key = "-", desc = "-"},
 		exit = {key = "escape", desc = "ESC"},
 		draw = {key = "1", desc = "BOTÃO ESQUERDO DO MOUSE"},
-		highSpeed = {key = "lshift", desc = "SHIFT ESQUERDO"},
-		lowSpeed = {key = "lctrl", desc = "CONTROL ESQUERDO"}
+		highSpeed = {key = "d", desc = "D"},
+		lowSpeed = {key = "s", desc = "S"},
+		shift = {key = "lshift", desc = "SHIFT ESQUERDO"}
 	}
 	placeTool.world = world
 	placeTool.colliders = {}
 	placeTool.colliderMode = false
+	placeTool.copy = false
 	placeTool.speed = 50000
 	placeTool.scale = 5
 	placeTool.path = love.filesystem.getSource()
@@ -75,8 +77,17 @@ function PlaceTool:update(dt)
 	if love.mouse.isDown(self.keys.draw.key) then
 		self:writeTile()
 	end
+
+	if love.keyboard.isDown(self.keys.shift.key) then
+		self.copy = true
+	else
+		self.copy = false
+	end
+
 	if love.mouse.isDown(self.keys.delete.key) then
-		self:deleteTile()
+		if not self.copy then
+			self:deleteTile()
+		end
 	end
 end --PlaceTool:update
 
@@ -135,6 +146,9 @@ function PlaceTool:mousepressed(mx,my,button)
 		if self:isMouseHoverToolbar() ~= 0 then
 			self.currentImage = self:isMouseHoverToolbar()
 		end
+	end
+	if button == 2 and self.copy then
+		self:copyTile()
 	end
 end--PlaceTool:mousepressed
 
@@ -453,7 +467,7 @@ end--PlaceTool:showInfo
 --Muda a barra de tiles para a proxima barra
 function PlaceTool:changeToolbar(next)
 	if next then
-		if self.spritesTableSize >= self.toolbar+9 then
+		if self.spritesTableSize > self.toolbar+9 then
 			self.currentImage = self.toolbar+10
 			self.toolbar = self.toolbar+9
 		end
@@ -669,6 +683,7 @@ function PlaceTool:loadInfo()
 	text = text:gsub("favorite", "\""..self.keys.favorite.desc.."\"")
 	text = text:gsub("highSpeed", "\""..self.keys.highSpeed.desc.."\"")
 	text = text:gsub("lowSpeed", "\""..self.keys.lowSpeed.desc.."\"")
+	text = text:gsub("shift", "\""..self.keys.shift.desc.."\"")
 
 	info:close()
 
@@ -811,3 +826,12 @@ function PlaceTool:isMouseHoverToolbar()
 
 	return 0
 end--PlaceTool:isMouseHoverToolbar
+
+function PlaceTool:copyTile()
+	for n, tile in ipairs(self.mapPositions) do
+		if tile.x*1 == self.adjMouseX and tile.y*1 == self.adjMouseY and self.currentImage*1 ~= tile.sprite*1 then
+			self.currentImage = tile.sprite*1
+			break
+		end
+	end
+end--PlaceTool:copyTile

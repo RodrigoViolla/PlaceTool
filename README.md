@@ -22,5 +22,6 @@ TECLAS<br><br>
   "I" - Mostra/Esconde controles do teclado<br>
   "G" - Mostra/Esconde a grade<br>
   "F" - Adiciona o sprite atual como favorito<br>
-  "SHIFT ESQUERDO" - Aumenta a velocidade da ferramenta<br>
-  "CONTROL ESQUERDO" - Diminui a velocidade da ferramenta<br>
+  "D" - Aumenta a velocidade da ferramenta<br>
+  "S" - Diminui a velocidade da ferramenta<br>
+  "SHIFT ESQUERDO"+"BOTÂO DIREITO DO MOUSE" - Copia tile atual<br>
