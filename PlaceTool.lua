@@ -30,12 +30,10 @@ function PlaceTool:new(world)
 		favorite = {key = "f", desc = "F"},
 		grid = {key = "g", desc = "G"},
 		info = {key = "i", desc = "I"},
-		zoomIn = {key = "=", desc = "="},
-		zoomOut = {key = "-", desc = "-"},
 		exit = {key = "escape", desc = "ESC"},
 		draw = {key = "1", desc = "BOTÃO ESQUERDO DO MOUSE"},
-		highSpeed = {key = "d", desc = "D"},
-		lowSpeed = {key = "s", desc = "S"},
+		highSpeed = {key = "=", desc = "+"},
+		lowSpeed = {key = "-", desc = "-"},
 		shift = {key = "lshift", desc = "SHIFT ESQUERDO"}
 	}
 	placeTool.world = world
@@ -121,12 +119,6 @@ function PlaceTool:keypressed(key)
 	if key == self.keys.previousTile.key or string.find(key, "%d") ~= nil then
 		self:changeTile(false, key)
 	end
-	if key == self.keys.zoomIn.key then
-		self:changeZoom(true)
-	end
-	if key == self.keys.zoomOut.key then
-		self:changeZoom(false)
-	end	
 	if key == self.keys.exit.key then
 		love.event.quit()
 	end
@@ -314,6 +306,8 @@ end--PlaceTool:drawMap
 
 --Desenha o sprite da ferramenta de acordo com self.currentImage
 function PlaceTool:drawTool()
+	local width = self.sprites[self.currentImage]:getWidth()
+	local height = self.sprites[self.currentImage]:getHeight()
 	if self.colliderMode then
 		love.graphics.setColor(0, 255, 0)
 	else
@@ -321,7 +315,7 @@ function PlaceTool:drawTool()
 		love.graphics.draw(self.sprites[self.currentImage], self.adjMouseX, self.adjMouseY, 0, 5, 5)
 		love.graphics.setColor(0, 0, 255)
 	end
-	love.graphics.rectangle('line', self.adjMouseX, self.adjMouseY, self.sprites[self.currentImage]:getWidth()*self.scale, self.sprites[self.currentImage]:getHeight()*self.scale)
+	love.graphics.rectangle('line', self.adjMouseX, self.adjMouseY, width*self.scale, height*self.scale)
 end--PlaceTool:drawTool
 
 --Desenha a barra de tiles e a barra de favoritos
@@ -334,6 +328,8 @@ function PlaceTool:drawToolbars()
 	local prevPos = self.sprites[1]:getWidth()
 	for i = 1,9 do
 		if self.sprites[i+self.toolbar] ~= nil then
+				local spriteWidth = self.sprites[i+self.toolbar]:getWidth()
+				local spriteHeight = self.sprites[i+self.toolbar]:getHeight()
 				local x = (self.adjPosX-(love.graphics.getWidth()/2/self.zoom)+prevPos*3/self.zoom)-self.sprites[1]:getWidth()*3/self.zoom
 				local y = self.adjPosY-(love.graphics.getHeight()/2/self.zoom)
 				
@@ -344,19 +340,21 @@ function PlaceTool:drawToolbars()
 				else
 					love.graphics.setColor(0, 255, 0, alpha)
 				end
-				love.graphics.rectangle("line", x, y, self.sprites[i+self.toolbar]:getWidth()*3/self.zoom, self.sprites[i+self.toolbar]:getHeight()*3/self.zoom)
+				love.graphics.rectangle("line", x, y, spriteWidth*3/self.zoom, spriteHeight*3/self.zoom)
 				love.graphics.print(i, x, y, 0, 1/self.zoom)
 
-				prevPos = prevPos+self.sprites[i+self.toolbar]:getWidth()
+				prevPos = prevPos+spriteWidth
 		end
 	end
 	--Barra de favoritos
 	local prevPos = self.sprites[1]:getWidth()
 	for i = 1,7 do
 		if self.sprites[self.favorites[i].num] ~= nil then
+				local spriteWidth = self.sprites[self.favorites[i].num]:getWidth()
+				local spriteHeight = self.sprites[self.favorites[i].num]:getHeight()
 				local x = (self.adjPosX-(love.graphics.getWidth()/2/self.zoom)+prevPos*3/self.zoom)-self.sprites[1]:getWidth()*3/self.zoom
-				local y = self.adjPosY+(love.graphics.getHeight()/2/self.zoom)-self.sprites[self.favorites[i].num]:getHeight()*3/self.zoom
-		
+				local y = self.adjPosY+(love.graphics.getHeight()/2/self.zoom)-spriteHeight*3/self.zoom
+
 				love.graphics.setColor(255, 255, 255, alpha)
 				love.graphics.draw(self.sprites[self.favorites[i].num], x, y, 0, 3/self.zoom, 3/self.zoom)
 				if self.favorites[i].num == self.currentImage then
@@ -364,10 +362,10 @@ function PlaceTool:drawToolbars()
 				else
 					love.graphics.setColor(0, 255, 0, alpha)
 				end
-				love.graphics.rectangle("line", x, y, self.sprites[self.favorites[i].num]:getWidth()*3/self.zoom, self.sprites[self.favorites[i].num]:getHeight()*3/self.zoom)
+				love.graphics.rectangle("line", x, y, spriteWidth*3/self.zoom, spriteHeight*3/self.zoom)
 				love.graphics.print(self.favorites[i].key:upper(), x, y, 0, 1/self.zoom)
 
-				prevPos = prevPos+self.sprites[self.favorites[i].num]:getWidth()
+				prevPos = prevPos+spriteWidth
 		end
 	end
 end--PlaceTool:drawToolbars
@@ -419,10 +417,12 @@ function PlaceTool:drawUI()
 		text = colliderText.."\nPressione \""..self.keys.info.key:upper().."\" para mostrar comandos do teclado."
 	end
 
-	love.graphics.print(text, (self.adjPosX-(love.graphics.getWidth()/2/self.zoom))+toolbarWidth*3.1/self.zoom, self.adjPosY-(love.graphics.getHeight()/2/self.zoom),0,1/self.zoom)
+	local posX = (self.adjPosX-(love.graphics.getWidth()/2/self.zoom))
+
+	love.graphics.print(text, posX+toolbarWidth*3.1/self.zoom, self.adjPosY-(love.graphics.getHeight()/2/self.zoom),0,1/self.zoom)
 
 	text = "Velocidade: "..self.speed/1000
-	love.graphics.print(text, (self.adjPosX-(love.graphics.getWidth()/2/self.zoom)), self.adjPosY+love.graphics.getHeight()/2/self.zoom-15/self.zoom,0,1/self.zoom)
+	love.graphics.print(text, posX, self.adjPosY+love.graphics.getHeight()/2/self.zoom-15/self.zoom,0,1/self.zoom)
 end--PlaceTool:drawUI
 
 --Deleta as cordenadas do arquivo tiles.txt de acordo com a posicao da ferramenta
@@ -549,23 +549,41 @@ function PlaceTool:drawGrid()
 		--Desenha a grid vertical
 		local prevPos = love.graphics.getWidth()/2
 		while prevPos < love.graphics.getWidth()/self.zoom do
-			love.graphics.line(self.adjPosX - love.graphics.getWidth()/2+prevPos, self.adjPosY - love.graphics.getHeight()/2/self.zoom, self.adjPosX - love.graphics.getWidth()/2+prevPos, self.adjPosY + love.graphics.getHeight()/2/self.zoom)
+			local posX = self.adjPosX - love.graphics.getWidth()/2+prevPos
+			local posY1 = self.adjPosY - love.graphics.getHeight()/2/self.zoom
+			local posY2 = self.adjPosY + love.graphics.getHeight()/2/self.zoom
+
+			love.graphics.line(posX, posY1, posX, posY2)
 			prevPos = prevPos+self.gridSize*self.scale
 		end
+
 		local prevPos = love.graphics.getWidth()/2
 		while prevPos > -love.graphics.getWidth()/self.zoom do
-			love.graphics.line(self.adjPosX - love.graphics.getWidth()/2+prevPos, self.adjPosY - love.graphics.getHeight()/2/self.zoom, self.adjPosX - love.graphics.getWidth()/2+prevPos, self.adjPosY + love.graphics.getHeight()/2/self.zoom)
+			local posX = self.adjPosX - love.graphics.getWidth()/2+prevPos
+			local posY1 = self.adjPosY - love.graphics.getHeight()/2/self.zoom
+			local posY2 = self.adjPosY + love.graphics.getHeight()/2/self.zoom
+
+			love.graphics.line(posX, posY1, posX, posY2)
 			prevPos = prevPos-self.gridSize*self.scale
 		end
 		--Desenha a grid horizontal
 		local prevPos = love.graphics.getHeight()/2
 		while prevPos < love.graphics.getHeight()/self.zoom do
-			love.graphics.line(self.adjPosX-love.graphics.getWidth()/2/self.zoom, self.adjPosY-love.graphics.getHeight()/2+prevPos,self.adjPosX+love.graphics.getWidth()/2/self.zoom, self.adjPosY-love.graphics.getHeight()/2+prevPos)
+			local posX1 = self.adjPosX-love.graphics.getWidth()/2/self.zoom
+			local posX2 = self.adjPosX+love.graphics.getWidth()/2/self.zoom
+			local posY = self.adjPosY-love.graphics.getHeight()/2+prevPos
+
+			love.graphics.line(posX1, posY, posX2, posY)
 			prevPos = prevPos+self.gridSize*self.scale
 		end
+
 		local prevPos = love.graphics.getHeight()/2
 		while prevPos > -love.graphics.getHeight()/self.zoom do
-			love.graphics.line(self.adjPosX-love.graphics.getWidth()/2/self.zoom, self.adjPosY-love.graphics.getHeight()/2+prevPos,self.adjPosX+love.graphics.getWidth()/2/self.zoom, self.adjPosY-love.graphics.getHeight()/2+prevPos)
+			local posX1 = self.adjPosX-love.graphics.getWidth()/2/self.zoom
+			local posX2 = self.adjPosX+love.graphics.getWidth()/2/self.zoom
+			local posY = self.adjPosY-love.graphics.getHeight()/2+prevPos
+
+			love.graphics.line(posX1, posY , posX2, posY)
 			prevPos = prevPos-self.gridSize*self.scale
 		end
 	end
@@ -674,8 +692,6 @@ function PlaceTool:loadInfo()
 	text = text:gsub("nextTile", "\""..self.keys.nextTile.desc.."\"")
 	text = text:gsub("previousTile", "\""..self.keys.previousTile.desc.."\"")
 	text = text:gsub("delete", "\""..self.keys.delete.desc.."\"")
-	text = text:gsub("zoomIn", "\""..self.keys.zoomIn.desc.."\"")
-	text = text:gsub("zoomOut", "\""..self.keys.zoomOut.desc.."\"")
 	text = text:gsub("nextToolbar", "\""..self.keys.nextToolbar.desc.."\"")
 	text = text:gsub("previousToolbar", "\""..self.keys.previousToolbar.desc.."\"")
 	text = text:gsub("info", "\""..self.keys.info.desc.."\"")
@@ -692,11 +708,14 @@ end--PlaceTool:loadInfo
 
 function PlaceTool:createCollider(x, y)
 	local collider = {}
+	local scaleX = self.sprites[self.currentImage]:getWidth()*self.scale
+	local scaleY = self.sprites[self.currentImage]:getHeight()*self.scale
+
 	collider.tileX, collider.tileY = x, y
 	collider.x = x+self.sprites[self.currentImage]:getWidth()*self.scale/2
 	collider.y = y+self.sprites[self.currentImage]:getHeight()*self.scale/2
 	collider.body = love.physics.newBody(self.world, collider.x, collider.y)
-	collider.shape = love.physics.newRectangleShape(self.sprites[self.currentImage]:getWidth()*self.scale, self.sprites[self.currentImage]:getHeight()*self.scale)
+	collider.shape = love.physics.newRectangleShape(scaleX, scaleY)
 	collider.fixture = love.physics.newFixture(collider.body, collider.shape)
 
 	local exists = false

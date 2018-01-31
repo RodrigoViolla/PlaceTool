@@ -15,8 +15,6 @@ TECLAS<br><br>
   "ESC" - Sair do editor<br>
   "/" - Muda para o proximo sprite<br>
   ";" - Muda para o sprite anterior<br>
-  "=" - Aumenta o zoom<br>
-  "-" - Diminui o zoom<br>
   "." - Proxima barra de tiles<br>
   "," - Barra de tiles anterior<br>
   "I" - Mostra/Esconde controles do teclado<br>
@@ -24,4 +22,4 @@ TECLAS<br><br>
   "F" - Adiciona o sprite atual como favorito<br>
   "D" - Aumenta a velocidade da ferramenta<br>
   "S" - Diminui a velocidade da ferramenta<br>
-  "SHIFT ESQUERDO"+"BOTÂO DIREITO DO MOUSE" - Copia tile atual<br>
+  "SHIFT ESQUERDO"+"BOTÃO DIREITO DO MOUSE" - Copia tile atual<br>

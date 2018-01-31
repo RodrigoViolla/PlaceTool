@@ -6,8 +6,6 @@ exit - Sair do editor
 colliderMode - Ativa/Desativa o modo de colliders
 nextTile - Muda para o proximo sprite
 previousTile - Muda para o sprite anterior
-zoomIn - Aumenta o zoom
-zoomOut - Diminui o zoom
 nextToolbar - Proxima barra de tiles
 previousToolbar - Barra de tiles anterior
 info - Mostra/Esconde controles do teclado
