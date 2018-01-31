@@ -40,7 +40,6 @@ function Map:new(world, debug, path, scale)
 	map.debug = debug
 	map.path = path
 	map.sprites = {}
-	map:checkTilesOrder()
 	map:loadSprites()
 	map.spritesTableSize = table.getn(map.sprites)
 	map.mapPositions = map:loadMapPositions()
@@ -81,28 +80,6 @@ function Map:drawMap()
 		love.graphics.draw(self.sprites[imgPos], position.x, position.y, 0, self.scale, self.scale)
 	end
 end--Map:drawMap
-
---Checa a ordem em que os tiles serao desenhados
-function Map:checkTilesOrder()
-	local isInList = nil
-	local images = love.filesystem.getDirectoryItems("tiles")
-	local tilesOrderRead = io.open(self.path.."/tilesOrder.txt", "r")
-	local fileText = tilesOrderRead:read('*a')
-	tilesOrderRead:close()
-
-	for cnt, tile in ipairs(images)do
-		isInList = fileText:find("\n"..tile)
-
-		if isInList == nil then
-			fileText = fileText..tile.."\n"
-		end
-	end
-	
-	local tilesOrderWrite = io.open(self.path.."/tilesOrder.txt", "w+")
-	tilesOrderWrite:flush()
-	tilesOrderWrite:write(fileText)
-	tilesOrderWrite:close()
-end--Map:checkTilesOrder
 
 --Carrega as imagens de acordo com a ordem em tilesOrder
 function Map:loadSprites()
@@ -158,4 +135,5 @@ function Map:createCollider(x, y)
 	
 	table.insert(self.colliders, collider)
 end--PlaceTool:createCollider
+
 ```
