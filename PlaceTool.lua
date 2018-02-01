@@ -177,7 +177,7 @@ end --PlaceTool:writeLocation
 
 --Carrega as cordenadas dos tiles do arquivo tiles.txt e guarda em uma table
 function PlaceTool:loadMapPositions()
-	local file = io.open(self.path.."/files/tiles.txt", "r")
+	local file = io.open(self.path.."/files/map/tiles.txt", "r")
 	local positions = {}
 	for line in file:lines() do
 		if line ~= "" then
@@ -195,7 +195,7 @@ function PlaceTool:loadMapPositions()
 end --PlaceTool:loadMapPositions
 
 function PlaceTool:saveMapPositions()
-	local file = io.open(self.path.."/files/tiles.txt", "w+")
+	local file = io.open(self.path.."/files/map/tiles.txt", "w+")
 	local textFile = ""
 
 	for i, position in ipairs(self.mapPositions)do
@@ -597,7 +597,7 @@ end--PlaceTool:drawGrid
 function PlaceTool:checkTilesOrder()
 	local isInList = nil
 	local images = love.filesystem.getDirectoryItems("tiles")
-	local tilesOrderRead = io.open(self.path.."/files/tilesOrder.txt", "r")
+	local tilesOrderRead = io.open(self.path.."/files/map/tilesOrder.txt", "r")
 	local fileText = tilesOrderRead:read('*a')
 	tilesOrderRead:close()
 
@@ -609,7 +609,7 @@ function PlaceTool:checkTilesOrder()
 		end
 	end
 	
-	local tilesOrderWrite = io.open(self.path.."/files/tilesOrder.txt", "w+")
+	local tilesOrderWrite = io.open(self.path.."/files/map/tilesOrder.txt", "w+")
 	tilesOrderWrite:flush()
 	tilesOrderWrite:write(fileText)
 	tilesOrderWrite:close()
@@ -617,7 +617,7 @@ end--PlaceTool:checkTilesOrder
 
 --Carrega as imagens de acordo com a ordem em tilesOrder
 function PlaceTool:loadSprites()
-	local tilesOrder = io.open(self.path.."/files/tilesOrder.txt", "r")
+	local tilesOrder = io.open(self.path.."/files/map/tilesOrder.txt", "r")
 	local cnt = 1
 	for line in tilesOrder:lines()do
 		if line ~= "" then
@@ -645,12 +645,12 @@ end
 
 --Deleta o nome do arquivo do documento tilesOrder.txt
 function PlaceTool:deleteImage(tileName)
-		local readFile = io.open(self.path.."/files/tilesOrder.txt", "r")
+		local readFile = io.open(self.path.."/files/map/tilesOrder.txt", "r")
 		fileText = readFile:read('*a')
 		readFile:close()
 		fileText = fileText:gsub(tileName, '\n')
 		fileText = fileText:gsub("\n+", '\n')
-		local file = io.open(self.path.."/files/tilesOrder.txt", "w+")
+		local file = io.open(self.path.."/files/map/tilesOrder.txt", "w+")
 		file:flush()
 		file:write(fileText)
 		file:close()
@@ -752,7 +752,7 @@ function PlaceTool:deleteCollider()
 end--PlaceTool:deleteCollider
 
 function PlaceTool:loadColliders()
-	local file = io.open(self.path.."/files/colliders.txt", "r")
+	local file = io.open(self.path.."/files/map/colliders.txt", "r")
 	for line in file:lines() do
 		if line ~= "" then
 			local linePositions = {}
@@ -771,7 +771,7 @@ function PlaceTool:saveColliders()
 		collidersText = collidersText..collider.tileX..","..collider.tileY.."\n"
 	end
 
-	local file = io.open(self.path.."/files/colliders.txt", "w+")
+	local file = io.open(self.path.."/files/map/colliders.txt", "w+")
 	file:flush()
 	file:write(collidersText)
 	file:close()
