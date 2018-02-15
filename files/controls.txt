@@ -14,3 +14,7 @@ favorite - Adiciona o sprite atual como favorito
 highSpeed - Aumenta a velocidade da ferramenta
 lowSpeed - Diminui a velocidade da ferramenta
 shift+delete  - Copia tile atual
+increaseColliderX - Aumentar tamanho X do collider
+decreaseColliderX - Diminuir tamanho X do collider
+increaseColliderY - Aumentar tamanho Y do collider
+decreaseColliderY - Diminuir tamanho Y do collider

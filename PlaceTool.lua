@@ -34,7 +34,11 @@ function PlaceTool:new(world)
 		draw = {key = "1", desc = "BOTÃO ESQUERDO DO MOUSE"},
 		highSpeed = {key = "=", desc = "+"},
 		lowSpeed = {key = "-", desc = "-"},
-		shift = {key = "lshift", desc = "SHIFT ESQUERDO"}
+		shift = {key = "lshift", desc = "SHIFT ESQUERDO"},
+		increaseColliderScaleX = {key = "k", desc = "L"},
+		decreaseColliderScaleX = {key = "h", desc = "J"},
+		increaseColliderScaleY = {key = "j", desc = "I"},
+		decreaseColliderScaleY = {key = "u", desc = "K"}
 	}
 	placeTool.world = world
 	placeTool.colliders = {}
@@ -65,6 +69,7 @@ function PlaceTool:new(world)
 	placeTool.info = false
 	placeTool.grid = true
 	placeTool.favoritesSelect = false
+	placeTool.colliderScale = {x = 1, y = 2}
 	placeTool:loadColliders()
 
 	return placeTool
@@ -130,6 +135,18 @@ function PlaceTool:keypressed(key)
 	end
 	if key == self.keys.lowSpeed.key then
 		self:changeSpeed(false)
+	end
+	if key == self.keys.increaseColliderScaleX.key then
+		self:changeColliderScaleX(true)
+	end
+	if key == self.keys.decreaseColliderScaleX.key then
+		self:changeColliderScaleX(false)
+	end
+	if key == self.keys.increaseColliderScaleY.key then
+		self:changeColliderScaleY(true)
+	end
+	if key == self.keys.decreaseColliderScaleY.key then
+		self:changeColliderScaleY(false)
 	end
 end --PlaceTool:keypressed
 
@@ -310,12 +327,13 @@ function PlaceTool:drawTool()
 	local height = self.sprites[self.currentImage]:getHeight()
 	if self.colliderMode then
 		love.graphics.setColor(0, 255, 0)
+		love.graphics.rectangle('line', self.adjMouseX, self.adjMouseY, width*self.scale/self.colliderScale.x, height*self.scale/self.colliderScale.y)
 	else
 		love.graphics.setColor(255, 255, 255, 150)
 		love.graphics.draw(self.sprites[self.currentImage], self.adjMouseX, self.adjMouseY, 0, 5, 5)
 		love.graphics.setColor(0, 0, 255)
+		love.graphics.rectangle('line', self.adjMouseX, self.adjMouseY, width*self.scale, height*self.scale)
 	end
-	love.graphics.rectangle('line', self.adjMouseX, self.adjMouseY, width*self.scale, height*self.scale)
 end--PlaceTool:drawTool
 
 --Desenha a barra de tiles e a barra de favoritos
@@ -496,7 +514,7 @@ end--PlaceTool:changeZoom
 function PlaceTool:writeTile()
 	if self:isMouseHoverToolbar() == 0 then
 		if self.colliderMode then
-			self:createCollider(self.adjMouseX, self.adjMouseY)
+			self:createCollider(self.adjMouseX, self.adjMouseY, self.colliderScale.x, self.colliderScale.y)
 		else
 			self:writeLocation()
 		end
@@ -700,23 +718,27 @@ function PlaceTool:loadInfo()
 	text = text:gsub("highSpeed", "\""..self.keys.highSpeed.desc.."\"")
 	text = text:gsub("lowSpeed", "\""..self.keys.lowSpeed.desc.."\"")
 	text = text:gsub("shift", "\""..self.keys.shift.desc.."\"")
-
-	info:close()
+	text = text:gsub("increaseColliderX", "\""..self.keys.increaseColliderScaleX.desc.."\"")
+	text = text:gsub("increaseColliderY", "\""..self.keys.increaseColliderScaleY.desc.."\"")
+	text = text:gsub("decreaseColliderX", "\""..self.keys.decreaseColliderScaleX.desc.."\"")
+	text = text:gsub("decreaseColliderY", "\""..self.keys.decreaseColliderScaleY.desc.."\"")
 
 	return text
 end--PlaceTool:loadInfo
 
-function PlaceTool:createCollider(x, y)
+function PlaceTool:createCollider(x, y, sx, sy)
 	local collider = {}
 	local scaleX = self.sprites[self.currentImage]:getWidth()*self.scale
 	local scaleY = self.sprites[self.currentImage]:getHeight()*self.scale
 
 	collider.tileX, collider.tileY = x, y
-	collider.x = x+self.sprites[self.currentImage]:getWidth()*self.scale/2
-	collider.y = y+self.sprites[self.currentImage]:getHeight()*self.scale/2
+	collider.x = x+self.sprites[self.currentImage]:getWidth()*self.scale/2/sx
+	collider.y = y+self.sprites[self.currentImage]:getHeight()*self.scale/2/sy
 	collider.body = love.physics.newBody(self.world, collider.x, collider.y)
-	collider.shape = love.physics.newRectangleShape(scaleX, scaleY)
+	collider.shape = love.physics.newRectangleShape(scaleX/sx, scaleY/sy)
 	collider.fixture = love.physics.newFixture(collider.body, collider.shape)
+	collider.sx = sx
+	collider.sy = sy
 
 	local exists = false
 
@@ -741,8 +763,8 @@ function PlaceTool:drawColliders()
 end--PlaceTool:drawColliders
 
 function PlaceTool:deleteCollider()
-	local deletePosX = self.adjMouseX+self.sprites[self.currentImage]:getWidth()*self.scale/2
-	local deletePosY = self.adjMouseY+self.sprites[self.currentImage]:getHeight()*self.scale/2
+	local deletePosX = self.adjMouseX+self.sprites[self.currentImage]:getWidth()*self.scale/2/self.colliderScale.x
+	local deletePosY = self.adjMouseY+self.sprites[self.currentImage]:getHeight()*self.scale/2/self.colliderScale.y
 
 	for i, collider in ipairs(self.colliders)do
 		if collider.x == deletePosX and collider.y == deletePosY then
@@ -759,7 +781,7 @@ function PlaceTool:loadColliders()
 			for num in line:gmatch"%d+" do
 					table.insert(linePositions, num)
 			end
-			self:createCollider(linePositions[1], linePositions[2])
+			self:createCollider(linePositions[1], linePositions[2], linePositions[3], linePositions[4])
 		end
 	end
 	file:close()
@@ -768,7 +790,7 @@ end--PlaceTool:loadColliders
 function PlaceTool:saveColliders()
 	local collidersText = ""
 	for i, collider in ipairs(self.colliders)do
-		collidersText = collidersText..collider.tileX..","..collider.tileY.."\n"
+		collidersText = collidersText..collider.tileX..","..collider.tileY..","..collider.sx..","..collider.sy.."\n"
 	end
 
 	local file = io.open(self.path.."/files/map/colliders.txt", "w+")
@@ -854,3 +876,19 @@ function PlaceTool:copyTile()
 		end
 	end
 end--PlaceTool:copyTile
+
+function PlaceTool:changeColliderScaleX(inc)
+	if inc then
+		self.colliderScale.x = self.colliderScale.x/2
+	else
+		self.colliderScale.x = self.colliderScale.x*2
+	end
+end--PlaceTool:changeColliderScaleX
+
+function PlaceTool:changeColliderScaleY(inc)
+	if inc then
+		self.colliderScale.y = self.colliderScale.y/2
+	else
+		self.colliderScale.y = self.colliderScale.y*2
+	end
+end--PlaceTool:changeColliderScaleX

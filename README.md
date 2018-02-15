@@ -22,7 +22,11 @@ TECLAS<br><br>
   "F" - Adiciona o sprite atual como favorito<br>
   "D" - Aumenta a velocidade da ferramenta<br>
   "S" - Diminui a velocidade da ferramenta<br>
-  "SHIFT ESQUERDO"+"BOTÃO DIREITO DO MOUSE" - Copia tile atual<br><br>
+  "SHIFT ESQUERDO"+"BOTÃO DIREITO DO MOUSE" - Copia tile atual<br>
+  "L" - Aumentar tamanho X do collider<br>
+  "J" - Diminuir tamanho X do collider<br>
+  "K" - Aumentar tamanho Y do collider<br>
+  "I" - Diminuir tamanho Y do collider<br><br>
   
 EXEMPLO PARA USO DO MAPA EM JOGOS:<br>
 
